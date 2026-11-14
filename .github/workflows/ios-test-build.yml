@@ -61,8 +61,12 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
 
       - name: Configure runtime properties
-        if: env.RELEASE_PROPERTIES_BASE64 != ''
         run: |
+          # Forks have no release secret; the build still needs the file to exist.
+          if [[ -z "${RELEASE_PROPERTIES_BASE64}" ]]; then
+            touch local.properties
+            exit 0
+          fi
           printf '%s' "${RELEASE_PROPERTIES_BASE64}" | base64 --decode > local.properties
           sed -i '' -E '/^[[:space:]]*(sdk\.dir|NUVIO_RELEASE_STORE_FILE)[[:space:]]*=/d' local.properties
           if [[ -n "${CONTRIBUTIONS_URL}" ]]; then
