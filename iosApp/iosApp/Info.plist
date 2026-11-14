@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>Flowix</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
@@ -48,9 +50,9 @@
 		</dict>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Use biometric authentication to unlock your primary Nuvio profile.</string>
+	<string>Use biometric authentication to unlock your primary Flowix profile.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Nuvio connects to media servers on your local network.</string>
+	<string>Flowix connects to media servers on your local network.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
