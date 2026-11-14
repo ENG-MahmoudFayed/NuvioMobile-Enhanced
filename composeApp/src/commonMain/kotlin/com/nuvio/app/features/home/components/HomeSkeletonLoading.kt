@@ -72,7 +72,7 @@ internal fun HomeSkeletonHero(
     heroStyle: HomeHeroStyle = HomeHeroStyle.FULL_BLEED,
 ) {
     val brush = rememberHomeSkeletonBrush()
-    val isCardStyle = heroStyle == HomeHeroStyle.CARD
+    val isCardStyle = heroStyle.isCard
     val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     BoxWithConstraints(
@@ -91,7 +91,7 @@ internal fun HomeSkeletonHero(
             )
             .clip(
                 if (isCardStyle) {
-                    RoundedCornerShape(HERO_CARD_CORNER_RADIUS)
+                    RoundedCornerShape(heroStyle.cardCornerRadius)
                 } else {
                     RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
                 },
@@ -108,6 +108,7 @@ internal fun HomeSkeletonHero(
                 maxWidth = maxWidth,
                 viewportHeight = viewportHeight,
                 isTablet = layout.isTablet,
+                heroStyle = heroStyle,
             )
         } else {
             layout.heroHeight

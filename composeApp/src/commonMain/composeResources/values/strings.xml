@@ -2929,4 +2929,8 @@
     <string name="settings_playback_toolbar_note">Buttons that do not apply to the current video, such as Next Episode on a movie, are skipped.</string>
     <string name="player_toolbar_button_resize">Resize</string>
     <string name="player_toolbar_button_quality">Quality</string>
+    <string name="theme_cinema">Cinema</string>
+    <string name="settings_homescreen_hero_style_billboard">Billboard</string>
+    <string name="settings_homescreen_hero_style_billboard_description">A poster card with Play and My List buttons.</string>
+    <string name="home_hero_my_list">My List</string>
 </resources>

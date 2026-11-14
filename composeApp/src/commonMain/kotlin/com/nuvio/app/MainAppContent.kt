@@ -111,7 +111,9 @@ import com.nuvio.app.features.downloads.DownloadsRepository
 import com.nuvio.app.features.home.HomeCatalogSection
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.HomeRepository
+import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
+import com.nuvio.app.features.home.resolveHomePlayTarget
 import com.nuvio.app.features.home.components.HomeHeroTrailerPlaybackController
 import com.nuvio.app.features.home.components.shouldBlurContinueWatchingArtwork
 import com.nuvio.app.features.library.refreshLibraryReleaseScheduleIfStale
@@ -1475,6 +1477,65 @@ internal fun MainAppContent(
             openContinueWatching(item, false, false)
         }
 
+        // A local library toggles in place; a tracker-backed library asks which lists to use.
+        val toggleLibraryMembership: (LibraryItem, String) -> Unit = { libraryItem, title ->
+            if (!isRemoteLibrarySource) {
+                LibraryRepository.toggleLocalSaved(libraryItem)
+            } else {
+                pickerItem = libraryItem
+                pickerTitle = title
+                pickerTabs = LibraryRepository.libraryListTabs(libraryItem)
+                pickerMembership = pickerTabs.associate { it.key to false }
+                pickerPending = true
+                pickerError = null
+                showLibraryListPicker = true
+                coroutineScope.launch {
+                    runCatching {
+                        val snapshot = LibraryRepository.getMembershipSnapshot(libraryItem)
+                        val tabs = LibraryRepository.libraryListTabs(libraryItem)
+                        pickerTabs = tabs
+                        pickerMembership = tabs.associate { tab ->
+                            tab.key to (snapshot[tab.key] == true)
+                        }
+                    }.onFailure { error ->
+                        pickerError = error.message ?: getString(Res.string.trakt_lists_load_failed)
+                    }
+                    pickerPending = false
+                }
+            }
+        }
+
+        val onHeroMyListClick: (MetaPreview) -> Unit = { preview ->
+            toggleLibraryMembership(preview.toLibraryItem(savedAtEpochMs = 0L), preview.name)
+        }
+
+        val onHeroPlayClick: (MetaPreview) -> Unit = { preview ->
+            HomeHeroTrailerPlaybackController.forceStop()
+            coroutineScope.launch {
+                val target = resolveHomePlayTarget(preview)
+                if (target == null) {
+                    navController.openPreview(preview)
+                } else {
+                    onPlay(
+                        target.type,
+                        target.videoId,
+                        target.parentMetaId,
+                        target.parentMetaType,
+                        target.title,
+                        target.logo,
+                        target.poster,
+                        target.background,
+                        target.seasonNumber,
+                        target.episodeNumber,
+                        target.episodeTitle,
+                        target.episodeThumbnail,
+                        target.pauseDescription,
+                        target.resumePositionMs,
+                    )
+                }
+            }
+        }
+
         val onContinueWatchingStartFromBeginning: (ContinueWatchingItem) -> Unit = { item ->
             openContinueWatching(item, false, true)
         }
@@ -1640,6 +1701,8 @@ internal fun MainAppContent(
                                 onPosterLongClick = { meta ->
                                     openPosterActions(PosterActionTarget(preview = meta))
                                 },
+                                onHeroPlayClick = onHeroPlayClick,
+                                onHeroMyListClick = onHeroMyListClick,
                                 onLibraryPosterClick = openLibraryItem,
                                 onLibraryCalendarEpisodeClick = openLibraryCalendarEpisode,
                                 onLibraryPosterLongClick = { item, section ->
@@ -2152,30 +2215,7 @@ internal fun MainAppContent(
                                             LibraryRepository.remove(libraryItem.id)
                                         }
                                     } else {
-                                        if (!isRemoteLibrarySource) {
-                                            LibraryRepository.toggleLocalSaved(libraryItem)
-                                        } else {
-                                            pickerItem = libraryItem
-                                            pickerTitle = preview.name
-                                            pickerTabs = LibraryRepository.libraryListTabs(libraryItem)
-                                            pickerMembership = pickerTabs.associate { it.key to false }
-                                            pickerPending = true
-                                            pickerError = null
-                                            showLibraryListPicker = true
-                                            coroutineScope.launch {
-                                                runCatching {
-                                                    val snapshot = LibraryRepository.getMembershipSnapshot(libraryItem)
-                                                    val tabs = LibraryRepository.libraryListTabs(libraryItem)
-                                                    pickerTabs = tabs
-                                                    pickerMembership = tabs.associate { tab ->
-                                                        tab.key to (snapshot[tab.key] == true)
-                                                    }
-                                                }.onFailure { error ->
-                                                    pickerError = error.message ?: getString(Res.string.trakt_lists_load_failed)
-                                                }
-                                                pickerPending = false
-                                            }
-                                        }
+                                        toggleLibraryMembership(libraryItem, preview.name)
                                     }
                                 },
                             ),

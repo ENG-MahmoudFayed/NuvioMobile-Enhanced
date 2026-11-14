@@ -55,6 +55,8 @@ import nuvio.composeapp.generated.resources.layout_catalog_type
 import nuvio.composeapp.generated.resources.layout_catalog_type_sub
 import nuvio.composeapp.generated.resources.settings_homescreen_empty_message
 import nuvio.composeapp.generated.resources.settings_homescreen_hero_style
+import nuvio.composeapp.generated.resources.settings_homescreen_hero_style_billboard
+import nuvio.composeapp.generated.resources.settings_homescreen_hero_style_billboard_description
 import nuvio.composeapp.generated.resources.settings_homescreen_hero_style_card
 import nuvio.composeapp.generated.resources.settings_homescreen_hero_style_card_description
 import nuvio.composeapp.generated.resources.settings_homescreen_hero_style_description
@@ -293,6 +295,16 @@ private fun HeroStyleOptions(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            HeroStyleOption(
+                modifier = Modifier.fillMaxWidth(),
+                style = HomeHeroStyle.BILLBOARD,
+                selectedStyle = selectedStyle,
+                title = stringResource(Res.string.settings_homescreen_hero_style_billboard),
+                description = stringResource(
+                    Res.string.settings_homescreen_hero_style_billboard_description,
+                ),
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

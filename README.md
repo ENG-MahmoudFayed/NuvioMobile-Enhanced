@@ -50,11 +50,14 @@ Everythings below are added on top of upstream Nuvio Mobile.
 
 | Feature | Where | Default |
 |---|---|---|
-| **Hero trailer autoplay** — trailers play in the hero carousel instead of static artwork. The carousel stops auto-advancing while a trailer plays, so it only moves when you swipe. | Settings → Layout → Home Layout → **Hero Trailer Playback** | Off |
+| **Hero trailer autoplay** — trailers play in the hero carousel instead of static artwork. The carousel stops auto-advancing while a trailer plays, so it only moves when you swipe. | Settings → Layout → Home Layout → **Hero Trailer Playback** | On |
 | **Trailer start with sound** — start the hero trailer unmuted instead of muted. You can still mute it with the speaker button. Appears once trailer playback is on. | Settings → Layout → Home Layout → **Start with sound** | Off |
 | **Trailer start delay** — how long the artwork holds before the trailer starts, `Instant` to 10 s. Appears once trailer playback is on. | Settings → Layout → Home Layout → **Trailer Start Delay** | Instant |
-| **Hero style** — `Full-bleed` (artwork spans the screen) or `Card` (rounded, inset). | Settings → Layout → Home Layout → **Hero Style** | Full-bleed |
-| **Dynamic background** — tints the home screen with a gradient pulled from the featured artwork's colours. | Settings → Layout → **Dynamic background color** | Off |
+| **Hero style** — `Billboard` (a rounded poster card with the title logo, genres, a **Play** button and a glass **My List** button inside it), `Full-bleed` (artwork spans the screen) or `Card` (rounded, inset). Play resumes or starts the next episode, the same as the details page. | Settings → Layout → Home Layout → **Hero Style** | Billboard |
+| **Cinema theme** — pure black with a red accent. | Settings → Layout → **Theme** | Cinema |
+| **Compact posters** — Netflix-style rows: smaller posters with 4 dp corners and no titles underneath, and Continue Watching as posters with a thin progress bar along the bottom edge. | Settings → Layout → **Poster Customization** and **Continue Watching** | On |
+| **Press feedback** — posters and the hero buttons shrink slightly while pressed and spring back on release. | — | Always on |
+| **Dynamic background** — tints the home screen with a gradient pulled from the featured artwork's colours. | Settings → Layout → **Dynamic background color** | On |
 | **Catalog accent underline** — accent rule under each catalog row heading. | Settings → Layout → **Catalog accent underline** | Off |
 | **Accent gradient everywhere** — the theme accent is drawn as its full gradient rather than a single colour: settings and Profile Insight icons, Taste DNA bars and chips, the catalog accent underline, primary buttons, and the tinted iOS tab bar in every tab bar mode. | Settings → Layout → **Theme** | Follows the selected theme |
 

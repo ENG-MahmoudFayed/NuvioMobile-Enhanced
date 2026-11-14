@@ -1,10 +1,48 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.ui.unit.dp
+import com.nuvio.app.features.home.HomeHeroStyle
 import com.nuvio.app.features.watchprogress.ContinueWatchingSectionStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class HomeHeroSectionTest {
+
+    @Test
+    fun `billboard is the default and unknown stored styles fall back to it`() {
+        assertEquals(HomeHeroStyle.BILLBOARD, HomeHeroStyle.Default)
+        assertEquals(HomeHeroStyle.BILLBOARD, HomeHeroStyle.fromStorageValue("billboard"))
+        assertEquals(HomeHeroStyle.CARD, HomeHeroStyle.fromStorageValue("card"))
+        assertEquals(HomeHeroStyle.Default, HomeHeroStyle.fromStorageValue("unknown"))
+        assertEquals(HomeHeroStyle.Default, HomeHeroStyle.fromStorageValue(null))
+    }
+
+    @Test
+    fun `billboard card is shorter than the poster card on phones`() {
+        val card = cardHeroHeight(maxWidth = 366.dp, viewportHeight = 844.dp, isTablet = false)
+        val billboard = cardHeroHeight(
+            maxWidth = 366.dp,
+            viewportHeight = 844.dp,
+            isTablet = false,
+            heroStyle = HomeHeroStyle.BILLBOARD,
+        )
+
+        assertEquals(549f, card.value, 0.001f)
+        assertEquals(505.08f, billboard.value, 0.001f)
+    }
+
+    @Test
+    fun `billboard uses the same wide artwork height as the card in landscape`() {
+        val card = cardHeroHeight(maxWidth = 844.dp, viewportHeight = 390.dp, isTablet = false)
+        val billboard = cardHeroHeight(
+            maxWidth = 844.dp,
+            viewportHeight = 390.dp,
+            isTablet = false,
+            heroStyle = HomeHeroStyle.BILLBOARD,
+        )
+
+        assertEquals(card, billboard)
+    }
 
     @Test
     fun `first and last indicators select adjacent pages across the loop`() {

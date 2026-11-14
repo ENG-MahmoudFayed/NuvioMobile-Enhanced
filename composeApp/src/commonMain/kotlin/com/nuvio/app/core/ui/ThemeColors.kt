@@ -173,6 +173,17 @@ object ThemeColors {
         backgroundCard = Color(0xFF222222),
     )
 
+    val Cinema = ThemeColorPalette(
+        secondary = Color(0xFFE50914),
+        secondaryVariant = Color(0xFFB20710),
+        nativeAccentHex = "#E50914",
+        focusRing = Color(0xFFFF3D47),
+        focusBackground = Color(0xFF3A0A0E),
+        background = Color(0xFF000000),
+        backgroundElevated = Color(0xFF141414),
+        backgroundCard = Color(0xFF1F1F1F),
+    )
+
     fun getColorPalette(
         theme: AppTheme,
         customColors: CustomThemeColors = CustomThemeColors.Default,
@@ -190,5 +201,6 @@ object ThemeColors {
         AppTheme.AMBER -> Amber
         AppTheme.ROSE -> Rose
         AppTheme.WHITE -> White
+        AppTheme.CINEMA -> Cinema
     }
 }

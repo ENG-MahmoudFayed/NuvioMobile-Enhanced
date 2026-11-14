@@ -3,7 +3,9 @@ package com.nuvio.app.features.home.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +38,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -42,6 +48,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,11 +66,13 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,6 +93,12 @@ import com.nuvio.app.core.ui.heroStretchHeight
 import com.nuvio.app.core.ui.LocalVerticalBarPadding
 import com.nuvio.app.core.ui.ScreenActivityEffect
 import com.nuvio.app.core.ui.heroStretchZoom
+import com.nuvio.app.core.ui.pressScale
+import com.nuvio.app.core.ui.glass.LocalLiquidGlassBackdrop
+import com.nuvio.app.core.ui.glass.ambientLiquidGlass
+import com.nuvio.app.core.ui.glass.isAmbientLiquidGlassActive
+import com.nuvio.app.core.ui.glass.nuvioBackdropSource
+import com.nuvio.app.core.ui.glass.rememberNuvioBackdrop
 import com.nuvio.app.features.details.HeroTrailerAudioState
 import com.nuvio.app.features.details.HeroTrailerSurface
 import com.nuvio.app.features.details.MetaDetailsRepository
@@ -94,6 +109,7 @@ import com.nuvio.app.features.details.youtubePlaybackUrl
 import com.nuvio.app.features.home.HomeHeroArtworkSource
 import com.nuvio.app.features.home.HomeHeroStyle
 import com.nuvio.app.features.home.MetaPreview
+import com.nuvio.app.features.library.LibraryRepository
 import com.nuvio.app.features.player.MiniPlayerController
 import com.nuvio.app.features.trailer.TrailerPlaybackResolver
 import com.nuvio.app.features.trailer.TrailerPlaybackSource
@@ -163,6 +179,19 @@ internal val HERO_CARD_CORNER_RADIUS = 28.dp
 internal val HERO_CARD_HORIZONTAL_PADDING = 12.dp
 internal val HERO_CARD_TOP_PADDING = 8.dp
 
+/** Billboard crops the poster a little shorter than 2:3 so the first row peeks in below it. */
+private const val BILLBOARD_HEIGHT_RATIO = 1.38f
+private const val BILLBOARD_SCRIM_FRACTION = 0.55f
+internal val HERO_BILLBOARD_CORNER_RADIUS = 12.dp
+private val BILLBOARD_CONTENT_MAX_WIDTH = 420.dp
+private val BillboardButtonShape = RoundedCornerShape(4.dp)
+private val BillboardButtonHeight = 44.dp
+private val BillboardButtonMaxWidth = 168.dp
+private val BillboardSecondaryButtonColor = Color(0xB36D6D6E)
+
+internal val HomeHeroStyle.cardCornerRadius: Dp
+    get() = if (this == HomeHeroStyle.BILLBOARD) HERO_BILLBOARD_CORNER_RADIUS else HERO_CARD_CORNER_RADIUS
+
 internal fun heroUsesWideArtwork(
     maxWidth: Dp,
     viewportHeight: Dp?,
@@ -173,6 +202,7 @@ internal fun cardHeroHeight(
     maxWidth: Dp,
     viewportHeight: Dp?,
     isTablet: Boolean,
+    heroStyle: HomeHeroStyle = HomeHeroStyle.CARD,
 ): Dp = if (heroUsesWideArtwork(maxWidth, viewportHeight, isTablet)) {
     val wideHeight = maxWidth * BACKDROP_HEIGHT_RATIO
     if (viewportHeight != null) {
@@ -180,6 +210,8 @@ internal fun cardHeroHeight(
     } else {
         wideHeight
     }
+} else if (heroStyle == HomeHeroStyle.BILLBOARD) {
+    maxWidth * BILLBOARD_HEIGHT_RATIO
 } else {
     maxWidth * TMDB_POSTER_HEIGHT_RATIO
 }
@@ -210,6 +242,8 @@ internal fun HomeHeroSection(
     showImdbRating: Boolean = true,
     showMdbListRatings: Boolean = false,
     onItemClick: ((MetaPreview) -> Unit)? = null,
+    onPlayClick: ((MetaPreview) -> Unit)? = null,
+    onMyListClick: ((MetaPreview) -> Unit)? = null,
     onActiveArtworkChange: ((String?) -> Unit)? = null,
 ) {
     if (items.isEmpty()) return
@@ -253,7 +287,8 @@ internal fun HomeHeroSection(
         pagerState.animateScrollToPage(nextPage)
     }
 
-    val isCardStyle = heroStyle == HomeHeroStyle.CARD
+    val isCardStyle = heroStyle.isCard
+    val isBillboard = heroStyle == HomeHeroStyle.BILLBOARD
     val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val cardInsetModifier = if (isCardStyle) {
         Modifier.padding(
@@ -265,10 +300,12 @@ internal fun HomeHeroSection(
         Modifier
     }
     val heroShape = if (isCardStyle) {
-        RoundedCornerShape(HERO_CARD_CORNER_RADIUS)
+        RoundedCornerShape(heroStyle.cardCornerRadius)
     } else {
         RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
     }
+    // The billboard's glass My List button refracts the artwork behind it.
+    val billboardBackdrop = rememberNuvioBackdrop()
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -283,7 +320,14 @@ internal fun HomeHeroSection(
                     itemCount = items.size,
                     coroutineScope = coroutineScope,
                 )
-                .clip(heroShape),
+                .clip(heroShape)
+                .then(
+                    if (isBillboard) {
+                        Modifier.border(1.dp, Color.White.copy(alpha = 0.14f), heroShape)
+                    } else {
+                        Modifier
+                    },
+                ),
         ) {
             val baseLayout = homeHeroLayout(
                 maxWidthDp = maxWidth.value,
@@ -296,6 +340,7 @@ internal fun HomeHeroSection(
                         maxWidth = maxWidth,
                         viewportHeight = viewportHeight,
                         isTablet = baseLayout.isTablet,
+                        heroStyle = heroStyle,
                     ),
                 )
             } else {
@@ -445,7 +490,8 @@ internal fun HomeHeroSection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(layout.heroHeight)
-                            .heroStretchZoom(stretchPx),
+                            .heroStretchZoom(stretchPx)
+                            .then(if (isBillboard) Modifier.nuvioBackdropSource(billboardBackdrop) else Modifier),
                     ) {
                         visiblePages.forEach { layer ->
                             val item = items[layer.itemIndex]
@@ -560,6 +606,23 @@ internal fun HomeHeroSection(
                     }
 
                     if (isCardStyle) {
+                        if (isBillboard) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(BILLBOARD_SCRIM_FRACTION)
+                                    .align(Alignment.BottomCenter)
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                Color.Black.copy(alpha = 0.55f),
+                                                Color.Black.copy(alpha = 0.88f),
+                                            ),
+                                        ),
+                                    ),
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -567,6 +630,44 @@ internal fun HomeHeroSection(
                                     onItemClick?.invoke(currentItem)
                                 },
                         )
+                        if (isBillboard) {
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .widthIn(max = BILLBOARD_CONTENT_MAX_WIDTH)
+                                    .padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Box(contentAlignment = Alignment.BottomCenter) {
+                                    visiblePages.forEach { layer ->
+                                        val layerItem = items[layer.itemIndex]
+                                        key(layerItem.stableKey()) {
+                                            Box(
+                                                modifier = Modifier.graphicsLayer {
+                                                    val offset = heroPageOffset(pagerState, layer.page)
+                                                    val visibility = (1f - abs(offset)).coerceIn(0f, 1f)
+                                                    alpha = ((visibility - 0.5f) * 2f).coerceIn(0f, 1f)
+                                                    translationX = -offset * heroWidthPx * HERO_CONTENT_PARALLAX
+                                                },
+                                            ) {
+                                                BillboardContentBlock(item = layerItem, layout = layout)
+                                            }
+                                        }
+                                    }
+                                }
+                                if (onPlayClick != null || onMyListClick != null) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    CompositionLocalProvider(LocalLiquidGlassBackdrop provides billboardBackdrop) {
+                                        BillboardActionButtons(
+                                            item = currentItem,
+                                            onPlayClick = onPlayClick,
+                                            onMyListClick = onMyListClick,
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         Box(
                             modifier = Modifier
@@ -635,8 +736,8 @@ internal fun HomeHeroSection(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(
-                                    top = statusBarTopPadding + 12.dp,
-                                    end = if (layout.isTablet) 32.dp else 18.dp,
+                                    top = if (isBillboard) 12.dp else statusBarTopPadding + 12.dp,
+                                    end = if (isBillboard) 12.dp else if (layout.isTablet) 32.dp else 18.dp,
                                 )
                                 .clip(CircleShape)
                                 .background(Color.Black.copy(alpha = 0.35f))
@@ -660,7 +761,7 @@ internal fun HomeHeroSection(
             }
         }
 
-        if (isCardStyle && items.size > 1) {
+        if (isCardStyle && !isBillboard && items.size > 1) {
             Spacer(modifier = Modifier.height(12.dp))
             HeroPageIndicator(
                 itemCount = items.size,
@@ -739,7 +840,7 @@ internal fun HomeHeroReservedSpace(
     mobileBelowSectionHeightHint: Dp? = null,
     heroStyle: HomeHeroStyle = HomeHeroStyle.FULL_BLEED,
 ) {
-    val isCardStyle = heroStyle == HomeHeroStyle.CARD
+    val isCardStyle = heroStyle.isCard
     val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     BoxWithConstraints(
@@ -758,7 +859,7 @@ internal fun HomeHeroReservedSpace(
             )
             .clip(
                 if (isCardStyle) {
-                    RoundedCornerShape(HERO_CARD_CORNER_RADIUS)
+                    RoundedCornerShape(heroStyle.cardCornerRadius)
                 } else {
                     RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
                 },
@@ -774,6 +875,7 @@ internal fun HomeHeroReservedSpace(
                 maxWidth = maxWidth,
                 viewportHeight = viewportHeight,
                 isTablet = baseLayout.isTablet,
+                heroStyle = heroStyle,
             )
         } else {
             baseLayout.heroHeight
@@ -888,6 +990,187 @@ private fun HeroContentBlock(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun BillboardContentBlock(
+    item: MetaPreview,
+    layout: HomeHeroLayout,
+) {
+    var logoLoadError by remember(item.type, item.id, item.logo) {
+        mutableStateOf(false)
+    }
+    val logoUrl = item.logo?.takeIf { it.isNotBlank() }
+    val detailsState = remember(item.type, item.id) {
+        mutableStateOf(MetaDetailsRepository.peek(item.type, item.id))
+    }
+    LaunchedEffect(item.type, item.id) {
+        if (detailsState.value == null) {
+            detailsState.value = runCatching {
+                MetaDetailsRepository.fetch(item.type, item.id)
+            }.getOrNull()
+        }
+    }
+    val genres = remember(item, detailsState.value) {
+        item.genres.ifEmpty { detailsState.value?.genres.orEmpty() }
+            .filter { it.isNotBlank() }
+            .take(3)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (logoUrl != null && !logoLoadError) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = item.name,
+                modifier = Modifier
+                    .fillMaxWidth(layout.logoWidthFraction)
+                    .aspectRatio(2.6f),
+                contentScale = ContentScale.Fit,
+                onError = { logoLoadError = true },
+            )
+        } else {
+            Text(
+                text = item.name,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.displaySmall,
+                color = Color.White,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (genres.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                genres.forEachIndexed { index, genre ->
+                    if (index > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+                    }
+                    Text(
+                        text = genre,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BillboardActionButtons(
+    item: MetaPreview,
+    onPlayClick: ((MetaPreview) -> Unit)?,
+    onMyListClick: ((MetaPreview) -> Unit)?,
+) {
+    val libraryUiState by remember {
+        LibraryRepository.ensureLoaded()
+        LibraryRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val isSaved = remember(libraryUiState, item.id, item.type) {
+        LibraryRepository.isSaved(item.id, item.type)
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+    ) {
+        if (onPlayClick != null) {
+            BillboardButton(
+                label = stringResource(Res.string.action_play),
+                icon = Icons.Rounded.PlayArrow,
+                containerColor = Color.White,
+                contentColor = Color.Black,
+                useGlass = false,
+                onClick = { onPlayClick(item) },
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = BillboardButtonMaxWidth),
+            )
+        }
+        if (onMyListClick != null) {
+            BillboardButton(
+                label = stringResource(Res.string.home_hero_my_list),
+                icon = if (isSaved) Icons.Rounded.Check else Icons.Rounded.Add,
+                containerColor = BillboardSecondaryButtonColor,
+                contentColor = Color.White,
+                useGlass = true,
+                onClick = { onMyListClick(item) },
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = BillboardButtonMaxWidth),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BillboardButton(
+    label: String,
+    icon: ImageVector,
+    containerColor: Color,
+    contentColor: Color,
+    useGlass: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val glassActive = useGlass && isAmbientLiquidGlassActive()
+    Row(
+        modifier = modifier
+            .height(BillboardButtonHeight)
+            .pressScale(interactionSource)
+            .then(
+                if (glassActive) {
+                    Modifier.ambientLiquidGlass(
+                        shape = BillboardButtonShape,
+                        tint = Color.White.copy(alpha = 0.14f),
+                        fallback = containerColor,
+                    )
+                } else {
+                    Modifier.background(containerColor, BillboardButtonShape)
+                },
+            )
+            .clip(BillboardButtonShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

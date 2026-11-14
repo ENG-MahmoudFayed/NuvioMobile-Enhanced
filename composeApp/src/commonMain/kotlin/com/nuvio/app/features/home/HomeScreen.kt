@@ -123,6 +123,8 @@ fun HomeScreen(
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
+    onHeroPlayClick: ((MetaPreview) -> Unit)? = null,
+    onHeroMyListClick: ((MetaPreview) -> Unit)? = null,
     onContinueWatchingClick: ((ContinueWatchingItem) -> Unit)? = null,
     onContinueWatchingLongPress: ((ContinueWatchingItem) -> Unit)? = null,
     continueWatchingDisintegrationRequest: DisintegrationRequest<String>? = null,
@@ -1051,6 +1053,8 @@ fun HomeScreen(
                                     showImdbRating = homeHeroState.showImdbRating,
                                     showMdbListRatings = homeHeroState.showMdbListRatings,
                                     onItemClick = onPosterClick,
+                                    onPlayClick = onHeroPlayClick,
+                                    onMyListClick = onHeroMyListClick,
                                     onActiveArtworkChange = onActiveHeroArtworkChange,
                                 )
 
@@ -1610,7 +1614,7 @@ private suspend fun resolveHomeNextUpCandidate(
     )
 }
 
-private fun MetaDetails.videoForSeriesAction(action: SeriesPrimaryAction): MetaVideo? {
+internal fun MetaDetails.videoForSeriesAction(action: SeriesPrimaryAction): MetaVideo? {
     if (action.seasonNumber != null && action.episodeNumber != null) {
         videos.firstOrNull { video ->
             video.season == action.seasonNumber &&

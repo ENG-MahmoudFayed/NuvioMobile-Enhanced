@@ -8,9 +8,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal const val DefaultPosterCardWidthDp = 126
-internal const val DefaultPosterCardHeightDp = 189
-internal const val DefaultPosterCardCornerRadiusDp = 12
+internal const val DefaultPosterCardWidthDp = 104
+internal const val DefaultPosterCardHeightDp = 156
+internal const val DefaultPosterCardCornerRadiusDp = 4
+internal const val DefaultPosterCardHideLabels = true
 
 @Serializable
 private data class StoredPosterCardStylePreferences(
@@ -18,7 +19,7 @@ private data class StoredPosterCardStylePreferences(
     val heightDp: Int = DefaultPosterCardHeightDp,
     val cornerRadiusDp: Int = DefaultPosterCardCornerRadiusDp,
     val catalogLandscapeModeEnabled: Boolean = false,
-    val hideLabelsEnabled: Boolean = false,
+    val hideLabelsEnabled: Boolean = DefaultPosterCardHideLabels,
     val alwaysShowLandscapeClearlogo: Boolean = false,
 )
 
@@ -27,7 +28,7 @@ data class PosterCardStyleUiState(
     val heightDp: Int = DefaultPosterCardHeightDp,
     val cornerRadiusDp: Int = DefaultPosterCardCornerRadiusDp,
     val catalogLandscapeModeEnabled: Boolean = false,
-    val hideLabelsEnabled: Boolean = false,
+    val hideLabelsEnabled: Boolean = DefaultPosterCardHideLabels,
     val alwaysShowLandscapeClearlogo: Boolean = false,
 )
 

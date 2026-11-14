@@ -36,8 +36,8 @@ data class HomeCatalogSettingsItem(
 
 internal data class HomeCatalogSettingsUiState(
     val heroEnabled: Boolean = true,
-    val heroStyle: HomeHeroStyle = HomeHeroStyle.FULL_BLEED,
-    val heroTrailerPlaybackEnabled: Boolean = false,
+    val heroStyle: HomeHeroStyle = HomeHeroStyle.Default,
+    val heroTrailerPlaybackEnabled: Boolean = true,
     val heroTrailerStartDelaySeconds: Int = HomeCatalogSettingsRepository.DEFAULT_HERO_TRAILER_START_DELAY_SECONDS,
     val heroTrailerStartUnmuted: Boolean = false,
     val showCatalogType: Boolean = true,
@@ -87,18 +87,25 @@ internal enum class HomeHeroArtworkSource(
 
 /**
  * Full-bleed keeps the original edge-to-edge hero. Card renders the artwork inside a rounded
- * TMDB-poster-ratio card inset from the screen edges, below the status bar.
+ * TMDB-poster-ratio card inset from the screen edges, below the status bar. Billboard is a
+ * shorter card that carries the title logo, genres and Play / My List buttons inside it.
  */
 internal enum class HomeHeroStyle(
     val storageValue: String,
 ) {
     FULL_BLEED("full_bleed"),
     CARD("card"),
+    BILLBOARD("billboard"),
     ;
 
+    val isCard: Boolean
+        get() = this != FULL_BLEED
+
     companion object {
+        val Default = BILLBOARD
+
         fun fromStorageValue(value: String?): HomeHeroStyle =
-            entries.firstOrNull { it.storageValue == value } ?: FULL_BLEED
+            entries.firstOrNull { it.storageValue == value } ?: Default
     }
 }
 
@@ -129,8 +136,8 @@ private data class StoredHomeCatalogPreference(
 @Serializable
 private data class StoredHomeCatalogSettingsPayload(
     val heroEnabled: Boolean = true,
-    val heroStyle: String = HomeHeroStyle.FULL_BLEED.storageValue,
-    val heroTrailerPlaybackEnabled: Boolean = false,
+    val heroStyle: String = HomeHeroStyle.Default.storageValue,
+    val heroTrailerPlaybackEnabled: Boolean = true,
     val heroTrailerStartDelaySeconds: Int = HomeCatalogSettingsRepository.DEFAULT_HERO_TRAILER_START_DELAY_SECONDS,
     val heroTrailerStartUnmuted: Boolean = false,
     val showCatalogType: Boolean = true,
@@ -166,8 +173,8 @@ object HomeCatalogSettingsRepository {
             preferencesRef.value = value
         }
     private var heroEnabled = true
-    private var heroStyle = HomeHeroStyle.FULL_BLEED
-    private var heroTrailerPlaybackEnabled = false
+    private var heroStyle = HomeHeroStyle.Default
+    private var heroTrailerPlaybackEnabled = true
     private var heroTrailerStartDelaySeconds = DEFAULT_HERO_TRAILER_START_DELAY_SECONDS
     private var heroTrailerStartUnmuted = false
     private var showCatalogType = true
@@ -177,8 +184,8 @@ object HomeCatalogSettingsRepository {
         hasLoaded = false
         preferences = emptyMap()
         heroEnabled = true
-        heroStyle = HomeHeroStyle.FULL_BLEED
-        heroTrailerPlaybackEnabled = false
+        heroStyle = HomeHeroStyle.Default
+        heroTrailerPlaybackEnabled = true
         heroTrailerStartDelaySeconds = DEFAULT_HERO_TRAILER_START_DELAY_SECONDS
         heroTrailerStartUnmuted = false
         showCatalogType = true
@@ -198,8 +205,8 @@ object HomeCatalogSettingsRepository {
         lastCollectionSync = null
         preferences = emptyMap()
         heroEnabled = true
-        heroStyle = HomeHeroStyle.FULL_BLEED
-        heroTrailerPlaybackEnabled = false
+        heroStyle = HomeHeroStyle.Default
+        heroTrailerPlaybackEnabled = true
         heroTrailerStartDelaySeconds = DEFAULT_HERO_TRAILER_START_DELAY_SECONDS
         heroTrailerStartUnmuted = false
         showCatalogType = true
@@ -357,8 +364,8 @@ object HomeCatalogSettingsRepository {
     fun resetToDefaults() {
         ensureLoaded()
         heroEnabled = true
-        heroStyle = HomeHeroStyle.FULL_BLEED
-        heroTrailerPlaybackEnabled = false
+        heroStyle = HomeHeroStyle.Default
+        heroTrailerPlaybackEnabled = true
         heroTrailerStartDelaySeconds = DEFAULT_HERO_TRAILER_START_DELAY_SECONDS
         heroTrailerStartUnmuted = false
         showCatalogType = true

@@ -1093,21 +1093,11 @@ private fun ContinueWatchingPosterCard(
                 }
             }
             if (item.progressFraction > 0f) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 6.dp, vertical = 6.dp),
-                ) {
-                    NuvioProgressBar(
-                        progress = item.progressFraction,
-                        modifier = Modifier.width(layout.posterCardWidth - 32.dp),
-                        height = layout.progressHeight,
-                        trackColor = MaterialTheme.colorScheme.surfaceTint.copy(alpha = 0.16f),
-                    )
-                }
+                NuvioProgressBar(
+                    progress = item.progressFraction,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    height = 3.dp,
+                )
             }
         }
 

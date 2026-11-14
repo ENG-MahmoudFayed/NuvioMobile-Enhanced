@@ -14,6 +14,7 @@ import com.nuvio.app.core.ui.glass.migrateLegacyNavBarGlassEffects
 import com.nuvio.app.core.ui.formatHexColor
 import com.nuvio.app.core.ui.parseHexColor
 import com.nuvio.app.core.ui.nativeAccentGradientHex
+import com.nuvio.app.features.membership.DefaultAppTheme
 import com.nuvio.app.features.membership.MemberAccessRepository
 import com.nuvio.app.features.membership.resolveCustomThemeColors
 import com.nuvio.app.features.membership.resolveAppTheme
@@ -31,7 +32,7 @@ object ThemeSettingsRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _selectedThemePreference = MutableStateFlow<AppTheme?>(null)
     val selectedThemePreference: StateFlow<AppTheme?> = _selectedThemePreference.asStateFlow()
-    private val _selectedTheme = MutableStateFlow(AppTheme.WHITE)
+    private val _selectedTheme = MutableStateFlow(DefaultAppTheme)
     val selectedTheme: StateFlow<AppTheme> = _selectedTheme.asStateFlow()
 
     private val _customThemePreference = MutableStateFlow(CustomThemeColors.Default)
@@ -48,7 +49,7 @@ object ThemeSettingsRepository {
     private val _liquidGlassNativeTabBarEnabled = MutableStateFlow(NuvioTabBarBehavior.Default.isEnabled)
     val liquidGlassNativeTabBarEnabled: StateFlow<Boolean> = _liquidGlassNativeTabBarEnabled.asStateFlow()
 
-    private val _dynamicArtworkBackgroundEnabled = MutableStateFlow(false)
+    private val _dynamicArtworkBackgroundEnabled = MutableStateFlow(true)
     val dynamicArtworkBackgroundEnabled: StateFlow<Boolean> = _dynamicArtworkBackgroundEnabled.asStateFlow()
 
     private val _showCatalogAccentEnabled = MutableStateFlow(false)
@@ -107,17 +108,17 @@ object ThemeSettingsRepository {
     fun clearLocalState() {
         hasLoaded = false
         _selectedThemePreference.value = null
-        _selectedTheme.value = AppTheme.WHITE
+        _selectedTheme.value = DefaultAppTheme
         _customThemePreference.value = CustomThemeColors.Default
         _customThemeColors.value = CustomThemeColors.solid(CustomThemeColors.Default.second)
         _amoledEnabled.value = false
         _tabBarBehavior.value = NuvioTabBarBehavior.Default
         _liquidGlassNativeTabBarEnabled.value = NuvioTabBarBehavior.Default.isEnabled
-        _dynamicArtworkBackgroundEnabled.value = false
+        _dynamicArtworkBackgroundEnabled.value = true
         _showCatalogAccentEnabled.value = false
         NativeTabBridge.publishAccentColor(
-            hexColor = AppTheme.WHITE.nativeTabAccentHex(),
-            gradientHexColors = ThemeColors.getColorPalette(AppTheme.WHITE).nativeAccentGradientHex(),
+            hexColor = DefaultAppTheme.nativeTabAccentHex(),
+            gradientHexColors = ThemeColors.getColorPalette(DefaultAppTheme).nativeAccentGradientHex(),
         )
         NativeTabBridge.publishTabBarBehavior(NuvioTabBarBehavior.Default)
         NativeTabBridge.publishLiquidGlassEnabled(NuvioTabBarBehavior.Default.isEnabled)
@@ -156,7 +157,7 @@ object ThemeSettingsRepository {
             )
         applyTabBarBehavior(behavior)
         _dynamicArtworkBackgroundEnabled.value =
-            ThemeSettingsStorage.loadDynamicArtworkBackgroundEnabled() ?: false
+            ThemeSettingsStorage.loadDynamicArtworkBackgroundEnabled() ?: true
         _showCatalogAccentEnabled.value =
             ThemeSettingsStorage.loadShowCatalogAccentEnabled() ?: false
         val appLanguage = AppLanguage.fromCode(ThemeSettingsStorage.loadSelectedAppLanguage())
