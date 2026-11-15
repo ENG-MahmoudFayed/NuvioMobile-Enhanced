@@ -222,6 +222,8 @@ internal fun AppTabHost(
                         continueWatchingDisintegrationRequest = state.continueWatchingDisintegrationRequest,
                         onFolderClick = actions.onFolderClick,
                         onFirstCatalogRendered = actions.onInitialHomeContentRendered,
+                        onDownloadsClick = actions.onDownloadsClick,
+                        onNotificationsClick = actions.onWhatsNewSettingsClick,
                     )
                 }
             }

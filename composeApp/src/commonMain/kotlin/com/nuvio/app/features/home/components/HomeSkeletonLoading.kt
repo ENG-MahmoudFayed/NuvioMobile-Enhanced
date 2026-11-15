@@ -81,7 +81,7 @@ internal fun HomeSkeletonHero(
             .then(
                 if (isCardStyle) {
                     Modifier.padding(
-                        top = statusBarTopPadding + HERO_CARD_TOP_PADDING,
+                        top = statusBarTopPadding + HERO_CARD_TOP_PADDING + LocalHomeHeroTopInset.current,
                         start = HERO_CARD_HORIZONTAL_PADDING,
                         end = HERO_CARD_HORIZONTAL_PADDING,
                     )

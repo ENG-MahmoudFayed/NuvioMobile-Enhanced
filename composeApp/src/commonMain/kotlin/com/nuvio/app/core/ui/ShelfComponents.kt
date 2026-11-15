@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -294,7 +295,7 @@ private fun NuvioShelfSectionHeader(
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 26.sp),
                 fontWeight = FontWeight.Bold,
                 color = tokens.colors.textPrimary,
                 maxLines = 1,
@@ -339,18 +340,15 @@ private fun NuvioViewAllPill(
     Box(
         modifier = modifier
             .size(actionSize)
-            .background(
-                color = tokens.colors.surface,
-                shape = RoundedCornerShape(NuvioTokens.Radius.xl),
-            )
+            .clip(RoundedCornerShape(NuvioTokens.Radius.full))
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
             contentDescription = viewAllText,
-            tint = tokens.colors.textMuted,
-            modifier = Modifier.size(iconSize),
+            tint = tokens.colors.textPrimary,
+            modifier = Modifier.size(iconSize + NuvioTokens.Space.s4),
         )
     }
 }

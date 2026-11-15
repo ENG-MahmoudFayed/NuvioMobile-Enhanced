@@ -5,18 +5,24 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
@@ -51,6 +57,13 @@ import com.nuvio.app.features.details.MetaVideo
 import com.nuvio.app.features.details.SeriesPrimaryAction
 import com.nuvio.app.features.details.seriesPrimaryAction
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
+import com.nuvio.app.features.home.components.HomeCinemaHeader
+import com.nuvio.app.features.home.components.HomeCinemaHeaderHeight
+import com.nuvio.app.features.home.components.HomeContentFilter
+import com.nuvio.app.features.home.components.HomeTop10Row
+import com.nuvio.app.features.home.components.LocalHomeHeroTopInset
+import com.nuvio.app.features.home.components.accepts
+import com.nuvio.app.features.home.components.top10Source
 import com.nuvio.app.features.home.components.HomeContinueWatchingSection
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.HomeHeroReservedSpace
@@ -130,6 +143,8 @@ fun HomeScreen(
     continueWatchingDisintegrationRequest: DisintegrationRequest<String>? = null,
     onFolderClick: ((collectionId: String, folderId: String) -> Unit)? = null,
     onFirstCatalogRendered: (() -> Unit)? = null,
+    onDownloadsClick: (() -> Unit)? = null,
+    onNotificationsClick: (() -> Unit)? = null,
 ) {
     LaunchedEffect(Unit) {
         AddonRepository.initialize()
@@ -146,6 +161,30 @@ fun HomeScreen(
     val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
     val homeUiState by HomeRepository.uiState.collectAsStateWithLifecycle()
     val homeHeroState = rememberHomeHeroState(homeUiState.heroItems)
+    var contentFilter by remember { mutableStateOf(HomeContentFilter()) }
+    val coroutineScope = rememberCoroutineScope()
+    val filteredHeroItems = remember(homeHeroState.items, contentFilter) {
+        if (!contentFilter.isActive) {
+            homeHeroState.items
+        } else {
+            homeHeroState.items
+                .filter { contentFilter.accepts(it.type, it.genres) }
+                .ifEmpty { homeHeroState.items }
+        }
+    }
+    val homeGenreOptions = remember(homeUiState.sections, homeUiState.heroItems) {
+        (homeUiState.heroItems.asSequence() + homeUiState.sections.asSequence().flatMap { it.items.asSequence() })
+            .flatMap { it.genres.asSequence() }
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .groupingBy { it }
+            .eachCount()
+            .entries
+            .sortedByDescending { it.value }
+            .take(24)
+            .map { it.key }
+            .sorted()
+    }
     val homeSettingsUiState by remember {
         HomeCatalogSettingsRepository.snapshot()
         HomeCatalogSettingsRepository.uiState
@@ -1011,11 +1050,50 @@ fun HomeScreen(
             { url -> activeHeroArtworkUrl = url }
         }
 
+        val headerStatusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val continueWatchingTitle = profileState.activeProfile?.name
+            ?.takeIf(String::isNotBlank)
+            ?.let { name -> stringResource(Res.string.home_continue_watching_for, name) }
+        val onContinueWatchingInfoClick: ((ContinueWatchingItem) -> Unit)? = onPosterClick?.let { openDetails ->
+            { item ->
+                openDetails(
+                    MetaPreview(
+                        id = item.parentMetaId,
+                        type = item.parentMetaType,
+                        name = item.title,
+                        poster = item.poster,
+                        banner = item.background,
+                        logo = item.logo,
+                    ),
+                )
+            }
+        }
+        val top10Section = remember(homeUiState.sections, keyedEnabledHomeItems) {
+            val enabledKeys = keyedEnabledHomeItems.mapTo(mutableSetOf()) { it.value.key }
+            homeUiState.sections.filter { it.key in enabledKeys }.top10Source()
+        }
+        val top10Entries = remember(top10Section, contentFilter) {
+            top10Section?.items
+                ?.filter { contentFilter.accepts(it.type, it.genres) }
+                .orEmpty()
+        }
+        val firstRowKey = remember(keyedEnabledHomeItems, sectionsMap, collectionsMap, contentFilter) {
+            keyedEnabledHomeItems.firstOrNull { keyed ->
+                val item = keyed.value
+                if (item.isCollection) {
+                    !contentFilter.isActive && collectionsMap[item.key] != null
+                } else {
+                    sectionsMap[item.key]?.items?.any { contentFilter.accepts(it.type, it.genres) } == true
+                }
+            }?.lazyKey
+        }
+
         DynamicArtworkBackground(artworkUrl = activeHeroArtworkUrl) {
+          CompositionLocalProvider(LocalHomeHeroTopInset provides HomeCinemaHeaderHeight) {
             NuvioScreen(
                 modifier = Modifier.fillMaxSize().then(heroStretchModifier),
                 horizontalPadding = 0.dp,
-                topPadding = if (showHeroSlot) 0.dp else null,
+                topPadding = if (showHeroSlot) 0.dp else headerStatusBarTop + HomeCinemaHeaderHeight + 8.dp,
                 listState = homeListState,
             ) {
                 if (showHeroSlot) {
@@ -1035,7 +1113,7 @@ fun HomeScreen(
                                 )
 
                                 homeUiState.heroItems.isNotEmpty() -> HomeHeroSection(
-                                    items = homeHeroState.items,
+                                    items = filteredHeroItems,
                                     modifier = Modifier,
                                     viewportHeight = maxHeight,
                                     mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
@@ -1082,6 +1160,8 @@ fun HomeScreen(
                             onItemClick = onContinueWatchingClick,
                             onItemLongPress = onContinueWatchingLongPress,
                         disintegrationRequest = continueWatchingDisintegrationRequest,
+                            continueWatchingTitle = continueWatchingTitle,
+                            onItemInfoClick = onContinueWatchingInfoClick,
                         )
                         items(3) {
                             HomeSkeletonRow(
@@ -1103,6 +1183,8 @@ fun HomeScreen(
                             onItemClick = onContinueWatchingClick,
                             onItemLongPress = onContinueWatchingLongPress,
                         disintegrationRequest = continueWatchingDisintegrationRequest,
+                            continueWatchingTitle = continueWatchingTitle,
+                            onItemInfoClick = onContinueWatchingInfoClick,
                         )
                         item {
                             when {
@@ -1194,13 +1276,15 @@ fun HomeScreen(
                             onItemClick = onContinueWatchingClick,
                             onItemLongPress = onContinueWatchingLongPress,
                         disintegrationRequest = continueWatchingDisintegrationRequest,
+                            continueWatchingTitle = continueWatchingTitle,
+                            onItemInfoClick = onContinueWatchingInfoClick,
                         )
 
                         keyedEnabledHomeItems.forEach { keyedSettingsItem ->
                             val settingsItem = keyedSettingsItem.value
                             if (settingsItem.isCollection) {
                                 val collection = collectionsMap[settingsItem.key]
-                                if (collection != null) {
+                                if (collection != null && !contentFilter.isActive) {
                                     item(key = keyedSettingsItem.lazyKey) {
                                         HomeCollectionRowSection(
                                             collection = collection,
@@ -1213,11 +1297,15 @@ fun HomeScreen(
                                 }
                             } else {
                                 val section = sectionsMap[settingsItem.key]
-                                if (section != null && section.items.isNotEmpty()) {
+                                val sectionEntries = section?.items
+                                    ?.filter { contentFilter.accepts(it.type, it.genres) }
+                                    ?.take(HOME_CATALOG_PREVIEW_LIMIT)
+                                    .orEmpty()
+                                if (section != null && sectionEntries.isNotEmpty()) {
                                     item(key = keyedSettingsItem.lazyKey) {
                                         HomeCatalogRowSection(
                                             section = section,
-                                            entries = section.items.take(HOME_CATALOG_PREVIEW_LIMIT),
+                                            entries = sectionEntries,
                                             modifier = Modifier.padding(bottom = 12.dp),
                                             sectionPadding = homeSectionPadding,
                                             onViewAllClick = if (section.canOpenCatalog(HOME_CATALOG_PREVIEW_LIMIT)) {
@@ -1233,11 +1321,38 @@ fun HomeScreen(
                                     }
                                 }
                             }
+                            if (keyedSettingsItem.lazyKey == firstRowKey && top10Section != null && top10Entries.size >= 3) {
+                                item(key = HOME_TOP10_SECTION_KEY) {
+                                    HomeTop10Row(
+                                        section = top10Section,
+                                        entries = top10Entries,
+                                        sectionPadding = homeSectionPadding,
+                                        modifier = Modifier.padding(bottom = 12.dp),
+                                        onPosterClick = onPosterClick,
+                                        onPosterLongClick = onPosterLongClick,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+          }
         }
+
+        HomeCinemaHeader(
+            title = stringResource(Res.string.compose_nav_home),
+            listState = homeListState,
+            filter = contentFilter,
+            genreOptions = homeGenreOptions,
+            onFilterChange = { filter ->
+                contentFilter = filter
+                coroutineScope.launch { homeListState.scrollToItem(0) }
+            },
+            onDownloadsClick = onDownloadsClick,
+            onNotificationsClick = onNotificationsClick,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
     }
 }
 
@@ -1253,6 +1368,8 @@ private fun LazyListScope.homeContinueWatchingSections(
     onItemClick: ((ContinueWatchingItem) -> Unit)?,
     onItemLongPress: ((ContinueWatchingItem) -> Unit)?,
     disintegrationRequest: DisintegrationRequest<String>?,
+    continueWatchingTitle: String? = null,
+    onItemInfoClick: ((ContinueWatchingItem) -> Unit)? = null,
 ) {
     if (!preferences.isVisible) return
 
@@ -1265,12 +1382,14 @@ private fun LazyListScope.homeContinueWatchingSections(
                 useEpisodeThumbnails = preferences.useEpisodeThumbnails,
                 blurNextUp = preferences.blurNextUp,
                 modifier = Modifier.padding(bottom = HomeContinueWatchingSectionBottomPadding),
+                title = continueWatchingTitle,
                 sectionPadding = sectionPadding,
                 layout = layout,
                 listState = continueWatchingListState,
                 onItemClick = onItemClick,
                 onItemLongPress = onItemLongPress,
                 disintegrationRequest = disintegrationRequest,
+                onItemInfoClick = onItemInfoClick,
             )
         }
     }
@@ -1291,6 +1410,7 @@ private fun LazyListScope.homeContinueWatchingSections(
                 onItemClick = onItemClick,
                 onItemLongPress = onItemLongPress,
                 disintegrationRequest = disintegrationRequest,
+                onItemInfoClick = onItemInfoClick,
             )
         }
     }
@@ -1299,6 +1419,7 @@ private fun LazyListScope.homeContinueWatchingSections(
 private const val HOME_CATALOG_PREVIEW_LIMIT = 18
 private const val HOME_CONTINUE_WATCHING_SECTION_KEY = "home_continue_watching"
 private const val HOME_UPCOMING_SECTION_KEY = "home_upcoming"
+private const val HOME_TOP10_SECTION_KEY = "home_top10"
 internal const val HomeContinueWatchingMaxRecentProgressItems = 300
 internal const val HomeNextUpInitialResolutionLimit = 32
 private const val NEXT_UP_RESOLUTION_CONCURRENCY = 4

@@ -2958,4 +2958,16 @@
     <string name="profiles_intro_got_it">Got It</string>
     <string name="profile_choose_your_profile">Choose Your Profile</string>
     <string name="profile_add_short">Add</string>
+    <string name="home_filter_shows">Shows</string>
+    <string name="home_filter_movies">Movies</string>
+    <string name="home_filter_categories">Categories</string>
+    <string name="home_filter_all_categories">All Categories</string>
+    <string name="home_filter_clear">Clear filter</string>
+    <string name="home_action_downloads">Downloads</string>
+    <string name="home_action_notifications">What's new</string>
+    <string name="home_hero_type_show">Show</string>
+    <string name="home_hero_type_movie">Movie</string>
+    <string name="home_top10_title">Top 10 in %1$s</string>
+    <string name="home_continue_watching_for">Continue Watching for %1$s</string>
+    <string name="home_badge_new_episode">New Episode</string>
 </resources>

@@ -112,7 +112,7 @@ fun NuvioDropdownChip(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NuvioDropdownOptionsSheet(
+internal fun NuvioDropdownOptionsSheet(
     title: String,
     options: List<NuvioDropdownOption>,
     selectedKey: String?,

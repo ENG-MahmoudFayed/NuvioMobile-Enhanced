@@ -2460,4 +2460,16 @@
     <string name="profiles_intro_got_it">Ho capito</string>
     <string name="profile_choose_your_profile">Scegli il tuo profilo</string>
     <string name="profile_add_short">Aggiungi</string>
+    <string name="home_filter_shows">Serie</string>
+    <string name="home_filter_movies">Film</string>
+    <string name="home_filter_categories">Categorie</string>
+    <string name="home_filter_all_categories">Tutte le categorie</string>
+    <string name="home_filter_clear">Rimuovi filtro</string>
+    <string name="home_action_downloads">Download</string>
+    <string name="home_action_notifications">Novità</string>
+    <string name="home_hero_type_show">Serie</string>
+    <string name="home_hero_type_movie">Film</string>
+    <string name="home_top10_title">Top 10 in %1$s</string>
+    <string name="home_continue_watching_for">Continua a guardare per %1$s</string>
+    <string name="home_badge_new_episode">Nuovo episodio</string>
 </resources>

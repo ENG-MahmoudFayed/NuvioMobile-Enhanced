@@ -49,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,6 +79,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
@@ -176,17 +178,20 @@ internal const val BACKDROP_HEIGHT_RATIO = 9f / 16f
 
 private const val CARD_WIDE_MAX_VIEWPORT_FRACTION = 0.72f
 internal val HERO_CARD_CORNER_RADIUS = 28.dp
-internal val HERO_CARD_HORIZONTAL_PADDING = 12.dp
+internal val HERO_CARD_HORIZONTAL_PADDING = 16.dp
 internal val HERO_CARD_TOP_PADDING = 8.dp
+
+/** Room a screen's own top bar takes above a card-style hero (Home's title and category pills). */
+internal val LocalHomeHeroTopInset = compositionLocalOf { 0.dp }
 
 /** Billboard crops the poster a little shorter than 2:3 so the first row peeks in below it. */
 private const val BILLBOARD_HEIGHT_RATIO = 1.38f
 private const val BILLBOARD_SCRIM_FRACTION = 0.55f
-internal val HERO_BILLBOARD_CORNER_RADIUS = 12.dp
+internal val HERO_BILLBOARD_CORNER_RADIUS = 16.dp
 private val BILLBOARD_CONTENT_MAX_WIDTH = 420.dp
-private val BillboardButtonShape = RoundedCornerShape(4.dp)
-private val BillboardButtonHeight = 44.dp
-private val BillboardButtonMaxWidth = 168.dp
+private val BillboardButtonShape = RoundedCornerShape(percent = 50)
+private val BillboardButtonHeight = 50.dp
+private val BillboardButtonMaxWidth = 190.dp
 private val BillboardSecondaryButtonColor = Color(0xB36D6D6E)
 
 internal val HomeHeroStyle.cardCornerRadius: Dp
@@ -292,7 +297,7 @@ internal fun HomeHeroSection(
     val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val cardInsetModifier = if (isCardStyle) {
         Modifier.padding(
-            top = statusBarTopPadding + HERO_CARD_TOP_PADDING,
+            top = statusBarTopPadding + HERO_CARD_TOP_PADDING + LocalHomeHeroTopInset.current,
             start = HERO_CARD_HORIZONTAL_PADDING,
             end = HERO_CARD_HORIZONTAL_PADDING,
         )
@@ -849,7 +854,7 @@ internal fun HomeHeroReservedSpace(
             .then(
                 if (isCardStyle) {
                     Modifier.padding(
-                        top = statusBarTopPadding + HERO_CARD_TOP_PADDING,
+                        top = statusBarTopPadding + HERO_CARD_TOP_PADDING + LocalHomeHeroTopInset.current,
                         start = HERO_CARD_HORIZONTAL_PADDING,
                         end = HERO_CARD_HORIZONTAL_PADDING,
                     )
@@ -1044,24 +1049,30 @@ private fun BillboardContentBlock(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        if (genres.isNotEmpty()) {
+        val typeLabel = when (item.type.trim().lowercase()) {
+            "movie" -> stringResource(Res.string.home_hero_type_movie)
+            "series", "tv", "show", "anime" -> stringResource(Res.string.home_hero_type_show)
+            else -> null
+        }
+        if (genres.isNotEmpty() || typeLabel != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                genres.forEachIndexed { index, genre ->
+                val parts = listOfNotNull(typeLabel) + genres
+                parts.forEachIndexed { index, part ->
                     if (index > 0) {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
+                        Text(
+                            text = "•",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.7f),
                         )
                     }
                     Text(
-                        text = genre,
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = part,
+                        fontSize = 17.sp,
+                        fontWeight = if (index == 0 && typeLabel != null) FontWeight.Bold else FontWeight.Normal,
                         color = Color.White,
                         maxLines = 1,
                     )

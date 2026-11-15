@@ -1,5 +1,14 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.ui.semantics.Role
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.CinemaPlayCircle
+import com.nuvio.app.core.ui.CinemaPosterTag
+import com.nuvio.app.core.ui.CinemaProgressLine
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -281,6 +290,7 @@ internal fun HomeContinueWatchingSection(
     onItemClick: ((ContinueWatchingItem) -> Unit)? = null,
     onItemLongPress: ((ContinueWatchingItem) -> Unit)? = null,
     disintegrationRequest: DisintegrationRequest<String>? = null,
+    onItemInfoClick: ((ContinueWatchingItem) -> Unit)? = null,
 ) {
     if (items.isEmpty()) return
 
@@ -299,6 +309,7 @@ internal fun HomeContinueWatchingSection(
             onItemClick = onItemClick,
             onItemLongPress = onItemLongPress,
             disintegrationRequest = disintegrationRequest,
+            onItemInfoClick = onItemInfoClick,
         )
     } else {
         BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -316,6 +327,7 @@ internal fun HomeContinueWatchingSection(
                 onItemClick = onItemClick,
                 onItemLongPress = onItemLongPress,
                 disintegrationRequest = disintegrationRequest,
+                onItemInfoClick = onItemInfoClick,
             )
         }
     }
@@ -336,6 +348,7 @@ private fun HomeContinueWatchingSectionContent(
     onItemClick: ((ContinueWatchingItem) -> Unit)?,
     onItemLongPress: ((ContinueWatchingItem) -> Unit)?,
     disintegrationRequest: DisintegrationRequest<String>?,
+    onItemInfoClick: ((ContinueWatchingItem) -> Unit)?,
 ) {
     key(dataSourceKey) {
         val disintegration = remember {
@@ -386,6 +399,7 @@ private fun HomeContinueWatchingSectionContent(
                         blurNextUp = blurNextUp,
                         onClick = onClick,
                         onLongClick = onLongClick,
+                        onInfoClick = if (entry.exiting) null else onItemInfoClick?.let { { it(item) } },
                     )
                 }
             }
@@ -1027,23 +1041,22 @@ private fun ContinueWatchingPosterCard(
     blurNextUp: Boolean,
     onClick: (() -> Unit)?,
     onLongClick: (() -> Unit)?,
+    onInfoClick: (() -> Unit)?,
 ) {
     val cornerRadius = rememberPosterCardStyleUiState().cornerRadiusDp.dp
+    val cardShape = RoundedCornerShape(cornerRadius)
     val imageUrl = item.continueWatchingPosterArtworkUrl(useEpisodeThumbnails)
     Column(
-        modifier = Modifier.width(layout.posterCardWidth),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .width(layout.posterCardWidth)
+            .clip(cardShape)
+            .background(CinemaColors.Sheet),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(layout.posterCardHeight)
-                .clip(RoundedCornerShape(cornerRadius))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .nuvioCardDepth(
-                    shape = RoundedCornerShape(cornerRadius),
-                    surface = NuvioCardDepthSurface.ContinueWatching,
-                )
                 .posterCardClickable(
                     onClick = onClick,
                     onLongClick = onLongClick,
@@ -1071,74 +1084,80 @@ private fun ContinueWatchingPosterCard(
                     contentScale = if (item.isCloudLibraryItem()) ContentScale.Fit else ContentScale.Crop,
                 )
             }
+            CinemaPlayCircle(
+                modifier = Modifier.align(Alignment.Center),
+                size = (layout.posterCardWidth.value * 0.4f).coerceIn(40f, 64f).dp,
+            )
             if (item.shufflePlayback) ShuffleBadge(Modifier.align(Alignment.TopStart).padding(8.dp))
             if (item.progressFraction <= 0f && item.seasonNumber != null && item.episodeNumber != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp),
-                ) {
-                    val todayIsoDate = CurrentDateProvider.todayIsoDate()
-                    val badgeText = when {
-                        item.isReleaseAlert -> {
-                            if (item.isNewSeasonRelease) stringResource(Res.string.cw_new_season)
-                            else stringResource(Res.string.cw_new_episode)
-                        }
-                        else -> {
-                            computeAirDateBadgeText(item.released, todayIsoDate)
-                                ?: stringResource(Res.string.home_continue_watching_up_next)
-                        }
+                val todayIsoDate = CurrentDateProvider.todayIsoDate()
+                val badgeText = when {
+                    item.isReleaseAlert -> {
+                        if (item.isNewSeasonRelease) stringResource(Res.string.cw_new_season)
+                        else stringResource(Res.string.cw_new_episode)
                     }
-                    UpNextBadge(item = item, text = badgeText, compact = true, textSize = layout.posterBadgeTextSize)
+                    else -> {
+                        computeAirDateBadgeText(item.released, todayIsoDate)
+                            ?: stringResource(Res.string.home_continue_watching_up_next)
+                    }
                 }
-            }
-            if (item.progressFraction > 0f) {
-                NuvioProgressBar(
-                    progress = item.progressFraction,
+                CinemaPosterTag(
+                    text = badgeText,
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    height = 3.dp,
                 )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (item.progressFraction > 0f) {
+                CinemaProgressLine(progress = item.progressFraction, height = 4.dp)
             }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
+                .height(layout.posterTitleBlockHeight + 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(layout.posterTitleBlockHeight),
+                    .fillMaxHeight()
+                    .clickable(enabled = onInfoClick != null, role = Role.Button) { onInfoClick?.invoke() },
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = item.title,
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = layout.posterTitleSize,
-                        fontWeight = FontWeight.SemiBold,
-                        lineHeight = 18.sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = item.title,
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp),
                 )
             }
-            if (item.seasonNumber != null && item.episodeNumber != null) {
-                Text(
-                    text = stringResource(
-                        Res.string.streams_episode_badge,
-                        item.seasonNumber,
-                        item.episodeNumber,
-                    ),
-                    modifier = Modifier.padding(start = 6.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = layout.posterMetaSize,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Box(
+                Modifier
+                    .width(1.dp)
+                    .height(22.dp)
+                    .background(Color.White.copy(alpha = 0.25f)),
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable(enabled = onLongClick != null, role = Role.Button) { onLongClick?.invoke() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.MoreVert,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp),
                 )
             }
         }
