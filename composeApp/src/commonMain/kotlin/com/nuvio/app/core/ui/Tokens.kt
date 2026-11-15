@@ -57,13 +57,13 @@ object NuvioTokens {
         val xxl = Space.s24
         val full = 999.dp
 
-        val card = xxl
-        val compactCard = lg
-        val sheet = xxl
+        val card = md
+        val compactCard = md
+        val sheet = Space.s28
         val dialog = Space.s28
-        val button = xl
+        val button = full
         val chip = full
-        val poster = lg
+        val poster = xs
         val avatar = full
         val playerPanel = xxl
     }
@@ -371,15 +371,15 @@ internal fun defaultNuvioThemeTokens(
     colorScheme: ColorScheme?,
 ): NuvioThemeTokens {
     val background = if (amoled) Color.Black else palette.background
-    val textPrimary = Color(0xFFF5F7F8)
-    val textSecondary = Color(0xFFB8BEC5)
-    val textMuted = Color(0xFF969CA3)
+    val textPrimary = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFFB3B3B3)
+    val textMuted = Color(0xFF8C8C8C)
     val surface = palette.backgroundElevated
     val surfaceCard = palette.backgroundCard
     val accent = palette.secondary
     val accentStrong = palette.secondaryVariant
-    val borderSubtle = Color(0xFF252A2A).copy(alpha = 0.55f)
-    val borderDefault = Color(0xFF252A2A)
+    val borderSubtle = Color(0xFF333333).copy(alpha = 0.55f)
+    val borderDefault = Color(0xFF333333)
     val overlayScrim = Color.Black.copy(alpha = NuvioTokens.Opacity.overlayMedium)
 
     return NuvioThemeTokens(
@@ -405,7 +405,7 @@ internal fun defaultNuvioThemeTokens(
             focusBackground = palette.focusBackground,
             borderSubtle = borderSubtle,
             borderDefault = borderDefault,
-            borderStrong = Color(0xFF3A4040),
+            borderStrong = Color(0xFF4D4D4D),
             borderFocus = palette.focusRing,
             borderSelected = accent.copy(alpha = NuvioTokens.Opacity.strong),
             success = Color(0xFF66BB6A),
@@ -511,7 +511,7 @@ internal fun defaultNuvioThemeTokens(
             playerWide = NuvioTokens.Breakpoint.playerWide,
         ),
         components = NuvioComponentTokens(
-            navItemShape = RoundedCornerShape(NuvioTokens.Radius.xl),
+            navItemShape = RoundedCornerShape(NuvioTokens.Radius.full),
             navIconSize = NuvioTokens.Icon.xl,
             navItemMaxWidth = 150.dp,
             sheetMaxWidth = 520.dp,

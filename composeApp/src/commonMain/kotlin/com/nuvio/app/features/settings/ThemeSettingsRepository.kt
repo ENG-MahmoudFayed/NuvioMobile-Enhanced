@@ -1,5 +1,8 @@
 package com.nuvio.app.features.settings
 
+import com.nuvio.app.core.onboarding.OnboardingFlags
+import com.nuvio.app.core.onboarding.OnboardingStorage
+import com.nuvio.app.core.storage.ProfileScopedKey
 import com.nuvio.app.core.ui.AppTheme
 import com.nuvio.app.core.ui.CustomThemeColors
 import com.nuvio.app.core.ui.NativeTabBridge
@@ -138,7 +141,7 @@ object ThemeSettingsRepository {
     private fun loadFromDisk() {
         hasLoaded = true
         val stored = ThemeSettingsStorage.loadSelectedTheme()
-        val theme = if (stored != null) {
+        var theme = if (stored != null) {
             try {
                 AppTheme.valueOf(stored)
             } catch (_: IllegalArgumentException) {
@@ -146,6 +149,16 @@ object ThemeSettingsRepository {
             }
         } else {
             null
+        }
+        // Profiles saved before the Cinema look move onto it once; picking another theme
+        // afterwards sticks.
+        val cinemaMigrationFlag = ProfileScopedKey.of(OnboardingFlags.CinemaThemeMigrated)
+        if (!OnboardingStorage.isDone(cinemaMigrationFlag)) {
+            if (theme != null && theme != AppTheme.CINEMA) {
+                theme = AppTheme.CINEMA
+                ThemeSettingsStorage.saveSelectedTheme(AppTheme.CINEMA.name)
+            }
+            OnboardingStorage.markDone(cinemaMigrationFlag)
         }
         _selectedThemePreference.value = theme
         _customThemePreference.value = CustomThemeColors.decode(ThemeSettingsStorage.loadCustomThemeColors())

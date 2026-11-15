@@ -181,7 +181,7 @@ object ThemeColors {
         focusBackground = Color(0xFF3A0A0E),
         background = Color(0xFF000000),
         backgroundElevated = Color(0xFF141414),
-        backgroundCard = Color(0xFF1F1F1F),
+        backgroundCard = Color(0xFF232323),
     )
 
     fun getColorPalette(

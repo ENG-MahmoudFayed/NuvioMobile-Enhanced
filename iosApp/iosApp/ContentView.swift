@@ -4,12 +4,7 @@ import SwiftUI
 import UIKit
 import ComposeApp
 
-private let nuvioBackgroundColor = UIColor(
-    red: 0.051,
-    green: 0.051,
-    blue: 0.051,
-    alpha: 1.0
-)
+private let nuvioBackgroundColor = UIColor.black
 
 let nuvioPlayerImmersiveSystemUIVisibilityDidChange = Notification.Name(
     "NuvioPlayerImmersiveSystemUIVisibilityDidChange"
