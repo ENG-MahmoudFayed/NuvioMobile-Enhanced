@@ -1994,9 +1994,7 @@
     <string name="settings_appearance_app_icon_sheet_title">Válassz alkalmazásikont</string>
     <string name="settings_appearance_nav_bar_style">Navigációs sáv</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Navigációs sáv stílusa</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptív</string>
     <string name="settings_nav_bar_style_expanded">Mindig kibontva</string>
-    <string name="settings_nav_bar_style_compact">Mindig összecsukva</string>
     <string name="settings_nav_bar_style_classic">Klasszikus</string>
     <string name="layout_catalog_type">Katalógustípus megjelenítése</string>
     <string name="layout_catalog_type_sub">Típusjelölés megjelenítése a katalógus neve mellett (Film/Sorozat).</string>
@@ -2220,7 +2218,6 @@
     <string name="settings_nav_bar_glow_on">Ragyogás be</string>
     <string name="settings_nav_bar_glow_off">Ragyogás ki</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Koppints a sávra a kipróbáláshoz. Görgesd az előnézetet az adaptív méretezés teszteléséhez.</string>
     <string name="settings_nav_bar_preview_tap_hint">Koppints a sávra a kipróbáláshoz.</string>
     <string name="settings_homescreen_load_failed_title">Nem sikerült betölteni a Kezdőlap katalógusait</string>
     <string name="settings_poster_always_show_landscape_clearlogo">Fekvő posztereknél mindig háttérképet mutasson logóval</string>

@@ -2292,11 +2292,8 @@
     <string name="settings_nav_bar_glow_on">Bagliore attivo</string>
     <string name="settings_nav_bar_glow_off">Bagliore disattivato</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Tocca la barra per provarla. Scorri l'anteprima per provare il ridimensionamento adattivo.</string>
     <string name="settings_nav_bar_preview_tap_hint">Tocca la barra per provarla.</string>
-    <string name="settings_nav_bar_style_adaptive">Adattivo</string>
     <string name="settings_nav_bar_style_expanded">Sempre espansa</string>
-    <string name="settings_nav_bar_style_compact">Sempre compatta</string>
     <string name="settings_homescreen_load_failed_title">Impossibile caricare i cataloghi della Home.</string>
     <string name="settings_card_depth_description">Aggiunge un bordo superiore illuminato e una leggera brillantezza alle schede immagine per creare un sottile effetto di profondità.</string>
     <string name="settings_card_depth_enabled">Attiva l'effetto profondità</string>

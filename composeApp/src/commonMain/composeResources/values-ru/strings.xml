@@ -669,9 +669,7 @@
     <string name="settings_appearance_app_language_sheet_title">Выберите язык</string>
     <string name="settings_appearance_nav_bar_style">Панель навигации</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Стиль панели навигации</string>
-    <string name="settings_nav_bar_style_adaptive">Адаптивный</string>
     <string name="settings_nav_bar_style_expanded">Всегда расширенный</string>
-    <string name="settings_nav_bar_style_compact">Всегда компактный</string>
     <string name="settings_nav_bar_style_classic">Классический</string>
     <string name="settings_appearance_continue_watching_description">Настройки раздела «Продолжить просмотр».</string>
     <string name="settings_appearance_liquid_glass">Жидкое стекло</string>

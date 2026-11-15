@@ -2031,9 +2031,7 @@
     <string name="settings_appearance_app_icon_sheet_title">Vybrat ikonu aplikace</string>
     <string name="settings_appearance_nav_bar_style">Navigační lišta</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Styl navigační lišty</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptivní</string>
     <string name="settings_nav_bar_style_expanded">Vždy rozšířený</string>
-    <string name="settings_nav_bar_style_compact">Vždy kompaktní</string>
     <string name="settings_nav_bar_style_classic">Klasický</string>
     <string name="settings_homescreen_load_failed_title">Domovské katalogy se nepodařilo načíst</string>
     <string name="layout_catalog_type">Zobrazit typ katalogu</string>

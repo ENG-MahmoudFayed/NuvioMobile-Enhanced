@@ -684,11 +684,8 @@
     <string name="settings_nav_bar_glow_on">গ্লো চালু</string>
     <string name="settings_nav_bar_glow_off">গ্লো বন্ধ</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">চেষ্টা করার জন্য বারে ট্যাপ করুন। অ্যাডাপটিভ সাইজিং চেষ্টা করতে পূর্বরূপ স্ক্রোল করুন।</string>
     <string name="settings_nav_bar_preview_tap_hint">চেষ্টা করার জন্য বারে ট্যাপ করুন।</string>
-    <string name="settings_nav_bar_style_adaptive">অ্যাডাপ্টিভ</string>
     <string name="settings_nav_bar_style_expanded">সর্বদা প্রসারিত</string>
-    <string name="settings_nav_bar_style_compact">সর্বদা কম্প্যাক্ট</string>
     <string name="settings_nav_bar_style_classic">ক্লাসিক</string>
     <string name="settings_appearance_continue_watching_description">দেখা চালিয়ে যান সেকশনের জন্য সেটিংস।</string>
     <string name="settings_appearance_liquid_glass">লিকুইড গ্লাস</string>

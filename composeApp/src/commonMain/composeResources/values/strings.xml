@@ -734,10 +734,6 @@
     <string name="settings_tab_bar_behavior_off_description">Use the standard in-app navigation bar.</string>
     <string name="settings_tab_bar_behavior_static">Static</string>
     <string name="settings_tab_bar_behavior_static_description">Always visible while you browse.</string>
-    <string name="settings_tab_bar_behavior_auto_hide">Auto hide</string>
-    <string name="settings_tab_bar_behavior_auto_hide_description">Slides away when you scroll down, returns when you scroll up.</string>
-    <string name="settings_tab_bar_behavior_morphed">Morphed</string>
-    <string name="settings_tab_bar_behavior_morphed_description">Shrinks to a compact pill when you scroll down, expands when you scroll up.</string>
     <string name="settings_appearance_dynamic_artwork_background_description">Tint the home screen with a soft gradient built from the featured artwork's colours.</string>
     <string name="settings_appearance_app_icon">App Icon</string>
     <string name="settings_appearance_app_icon_arctic_blue">Arctic Blue</string>
@@ -762,11 +758,8 @@
     <string name="settings_nav_bar_glow_on">Glow on</string>
     <string name="settings_nav_bar_glow_off">Glow off</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Tap the bar to try it. Scroll the preview to try adaptive sizing.</string>
     <string name="settings_nav_bar_preview_tap_hint">Tap the bar to try it.</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptive</string>
     <string name="settings_nav_bar_style_expanded">Always Expanded</string>
-    <string name="settings_nav_bar_style_compact">Always Compact</string>
     <string name="settings_nav_bar_style_classic">Classic</string>
     <string name="settings_appearance_continue_watching_description">Settings for the Continue Watching section.</string>
     <string name="settings_appearance_liquid_glass">Liquid Glass</string>

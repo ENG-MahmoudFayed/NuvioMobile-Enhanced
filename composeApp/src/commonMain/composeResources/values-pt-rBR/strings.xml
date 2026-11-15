@@ -725,10 +725,6 @@
     <string name="settings_tab_bar_behavior_off_description">Usa a barra de navegação padrão do aplicativo.</string>
     <string name="settings_tab_bar_behavior_static">Estática</string>
     <string name="settings_tab_bar_behavior_static_description">Permanece sempre visível durante a navegação.</string>
-    <string name="settings_tab_bar_behavior_auto_hide">Ocultar automaticamente</string>
-    <string name="settings_tab_bar_behavior_auto_hide_description">Desaparece ao rolar para baixo e volta ao rolar para cima.</string>
-    <string name="settings_tab_bar_behavior_morphed">Adaptável</string>
-    <string name="settings_tab_bar_behavior_morphed_description">Encolhe para uma pílula compacta ao rolar para baixo e se expande ao rolar para cima.</string>
     <string name="settings_appearance_dynamic_artwork_background_description">Aplica à tela inicial um gradiente suave com as cores da arte em destaque.</string>
     <string name="settings_appearance_app_icon">Ícone do app</string>
     <string name="settings_appearance_app_icon_arctic_blue">Azul ártico</string>
@@ -753,11 +749,8 @@
     <string name="settings_nav_bar_glow_on">Brilho ativado</string>
     <string name="settings_nav_bar_glow_off">Brilho desativado</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Toque na barra para testar. Role a prévia para experimentar o dimensionamento adaptativo.</string>
     <string name="settings_nav_bar_preview_tap_hint">Toque na barra para testar.</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptativo</string>
     <string name="settings_nav_bar_style_expanded">Sempre expandido</string>
-    <string name="settings_nav_bar_style_compact">Sempre compacto</string>
     <string name="settings_nav_bar_style_classic">Clássico</string>
     <string name="settings_appearance_continue_watching_description">Configurações para a seção Continuar assistindo.</string>
     <string name="settings_appearance_liquid_glass">Liquid Glass</string>

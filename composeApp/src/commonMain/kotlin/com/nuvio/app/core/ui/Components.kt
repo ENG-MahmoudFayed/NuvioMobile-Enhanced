@@ -79,10 +79,8 @@ fun NuvioScreen(
     horizontalPadding: Dp = MaterialTheme.nuvio.spacing.screenHorizontal,
     topPadding: Dp? = null,
     listState: LazyListState = rememberLazyListState(),
-    autoHidesNativeTabBar: Boolean = false,
     content: LazyListScope.() -> Unit,
 ) {
-    NativeTabBarScrollEffect(listState = listState, enabled = autoHidesNativeTabBar)
     val tokens = MaterialTheme.nuvio
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val screenBackground = if (LocalDynamicArtworkBackgroundActive.current) {

@@ -685,11 +685,8 @@
     <string name="settings_nav_bar_glow_on">Sjaj uključen</string>
     <string name="settings_nav_bar_glow_off">Sjaj isključen</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Dodirnite traku da biste je isprobali. Pomičite pretpregled da biste isprobali prilagodljivu veličinu.</string>
     <string name="settings_nav_bar_preview_tap_hint">Dodirnite traku da biste je isprobali.</string>
-    <string name="settings_nav_bar_style_adaptive">Prilagodljivo</string>
     <string name="settings_nav_bar_style_expanded">Uvijek prošireno</string>
-    <string name="settings_nav_bar_style_compact">Uvijek kompaktno</string>
     <string name="settings_nav_bar_style_classic">Klasično</string>
     <string name="settings_appearance_continue_watching_description">Postavke za odjeljak Nastavi gledati.</string>
     <string name="settings_appearance_liquid_glass">Tekuće staklo</string>

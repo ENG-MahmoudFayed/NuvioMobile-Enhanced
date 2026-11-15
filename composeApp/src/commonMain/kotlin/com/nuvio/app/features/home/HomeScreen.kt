@@ -1017,7 +1017,6 @@ fun HomeScreen(
                 horizontalPadding = 0.dp,
                 topPadding = if (showHeroSlot) 0.dp else null,
                 listState = homeListState,
-                autoHidesNativeTabBar = true,
             ) {
                 if (showHeroSlot) {
                     item(key = "home_hero", contentType = "hero") {

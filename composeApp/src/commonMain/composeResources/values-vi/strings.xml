@@ -685,11 +685,8 @@
     <string name="settings_nav_bar_glow_on">Bật phát sáng</string>
     <string name="settings_nav_bar_glow_off">Tắt phát sáng</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Chạm vào thanh điều hướng để dùng thử. Cuộn phần xem trước để thử tự động thay đổi kích thước</string>
     <string name="settings_nav_bar_preview_tap_hint">Chạm vào thanh điều hướng để dùng thử.</string>
-    <string name="settings_nav_bar_style_adaptive">Tự thích ứng</string>
     <string name="settings_nav_bar_style_expanded">Luôn mở rộng</string>
-    <string name="settings_nav_bar_style_compact">Luôn thu gọn</string>
     <string name="settings_nav_bar_style_classic">Cổ điển</string>
     <string name="settings_appearance_continue_watching_description">Cài đặt cho mục Tiếp tục Xem</string>
     <string name="settings_appearance_liquid_glass">Kính lỏng</string>

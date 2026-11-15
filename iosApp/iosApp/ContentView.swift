@@ -925,8 +925,6 @@ final class AppNavigationCoordinator: ObservableObject {
     @Published private(set) var localizedAddProfileTitle = ""
     @Published var isProfileSwitcherPresented = false
 
-    private var tabBarTransitionTask: Task<Void, Never>?
-
     let homeCoordinator = TabNavigationCoordinator()
     let searchCoordinator = TabNavigationCoordinator()
     let libraryCoordinator = TabNavigationCoordinator()
@@ -948,7 +946,7 @@ final class AppNavigationCoordinator: ObservableObject {
         }
         NativeTabBridgeKt.observeNativeTabBarVisible { [weak self] visible in
             guard let self else { return }
-            self.setTabBarVisible(visible.boolValue, animated: self.tabBarBehavior == .morphed)
+            self.setTabBarVisible(visible.boolValue)
         }
         allCoordinators.forEach { coordinator in
             coordinator.onReturnedToRoot = { [weak self] in
@@ -976,17 +974,14 @@ final class AppNavigationCoordinator: ObservableObject {
     }
 
     var usesGlassTabBarOverlay: Bool {
-        tabBarBehavior.usesCompactPill ||
-            (tabBarBehavior.isEnabled && UIDevice.current.userInterfaceIdiom == .pad)
+        tabBarBehavior.isEnabled && UIDevice.current.userInterfaceIdiom == .pad
     }
 
     func reloadTabBarBehavior() {
         let behavior = NuvioTabBarBehavior.current()
         guard tabBarBehavior != behavior else { return }
         tabBarBehavior = behavior
-        if !behavior.respondsToScroll {
-            setTabBarVisible(true)
-        }
+        setTabBarVisible(true)
     }
 
     private func refreshSelectedTabDepth() {
@@ -997,42 +992,27 @@ final class AppNavigationCoordinator: ObservableObject {
     }
 
     func requestTabBarVisible(_ visible: Bool) {
-        setTabBarVisible(visible, animated: tabBarBehavior == .morphed)
+        setTabBarVisible(visible)
     }
 
     func reloadTabBarVisibility() {
-        guard tabBarBehavior.respondsToScroll else {
-            setTabBarVisible(true)
-            return
-        }
         guard let visible = UserDefaults.standard.object(
             forKey: Self.nativeTabBarVisibleKey
         ) as? Bool else {
             return
         }
-        setTabBarVisible(visible, animated: tabBarBehavior == .morphed)
+        setTabBarVisible(visible)
     }
 
-    private func setTabBarVisible(_ visible: Bool, animated: Bool = false) {
+    private func setTabBarVisible(_ visible: Bool) {
         UserDefaults.standard.set(visible, forKey: Self.nativeTabBarVisibleKey)
         if visible {
             profileTabInteraction.publishIconFrame()
         }
 
-        tabBarTransitionTask?.cancel()
-        tabBarTransitionTask = nil
-
-        guard animated else {
-            isTabBarVisible = visible
-            isNativeTabBarVisible = visible
-            isCompactPillHidden = visible
-            return
-        }
-
-        isNativeTabBarVisible = false
-        isCompactPillHidden = false
-        guard isTabBarVisible != visible else { return }
         isTabBarVisible = visible
+        isNativeTabBarVisible = visible
+        isCompactPillHidden = visible
     }
 
     func reloadLiveTvTabVisibility() {
@@ -1366,12 +1346,7 @@ struct TabContentView: View {
                 : Visibility.hidden,
             for: .tabBar
         )
-        .animation(
-            appCoordinator.tabBarBehavior == .autoHide
-                ? .easeInOut(duration: 0.18)
-                : nil,
-            value: appCoordinator.isNativeTabBarVisible
-        )
+        .animation(nil, value: appCoordinator.isNativeTabBarVisible)
     }
 }
 
@@ -1890,9 +1865,7 @@ struct NativeNavContentView: View {
         }
         .id(appCoordinator.isLiveTvTabVisible)
         .tint(Color(uiColor: iconStore.accentColor))
-        .tabBarMinimizeBehavior(
-            appCoordinator.tabBarBehavior == .autoHide ? .onScrollDown : .never
-        )
+        .tabBarMinimizeBehavior(.never)
         .overlay(alignment: .bottom) {
             if appCoordinator.usesGlassTabBarOverlay &&
                 appCoordinator.isAppReady &&

@@ -404,11 +404,8 @@
     <string name="settings_nav_bar_glow_on">Λάμψη ενεργή</string>
     <string name="settings_nav_bar_glow_off">Λάμψη ανενεργή</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Πατήστε τη γραμμή για να τη δοκιμάσετε. Κάντε κύλιση στην προεπισκόπηση για να δοκιμάσετε το προσαρμοστικό μέγεθος.</string>
     <string name="settings_nav_bar_preview_tap_hint">Πατήστε τη γραμμή για να τη δοκιμάσετε.</string>
-    <string name="settings_nav_bar_style_adaptive">Προσαρμοστική</string>
     <string name="settings_nav_bar_style_expanded">Πάντα εκτεταμένη</string>
-    <string name="settings_nav_bar_style_compact">Πάντα συμπαγής</string>
     <string name="settings_nav_bar_style_classic">Κλασική</string>
     <string name="settings_appearance_continue_watching_description">Εμφάνιση, απόκρυψη και στυλ της ενότητας Συνέχεια παρακολούθησης.</string>
     <string name="settings_appearance_poster_customization_description">Ρύθμιση κοινού πλάτους κάρτας αφίσας και προεπιλογών ακτίνας γωνίας.</string>

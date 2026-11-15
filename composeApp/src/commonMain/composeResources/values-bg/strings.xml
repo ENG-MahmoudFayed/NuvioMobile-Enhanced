@@ -669,9 +669,7 @@
     <string name="settings_appearance_app_language_sheet_title">Избери език</string>
     <string name="settings_appearance_nav_bar_style">Навигационна лента</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Стил на навигационната лента</string>
-    <string name="settings_nav_bar_style_adaptive">Адаптивен</string>
     <string name="settings_nav_bar_style_expanded">Винаги разширен</string>
-    <string name="settings_nav_bar_style_compact">Винаги компактен</string>
     <string name="settings_nav_bar_style_classic">Класически</string>
     <string name="settings_appearance_continue_watching_description">Настройки за раздела „Продължи гледането".</string>
     <string name="settings_appearance_liquid_glass">Liquid Glass</string>

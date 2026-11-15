@@ -1916,9 +1916,7 @@
     <string name="downloads_open_directory_failed">Nie udało się otworzyć folderu pobranych</string>
     <string name="settings_appearance_nav_bar_style">Pasek nawigacji</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Styl paska nawigacji</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptacyjny</string>
     <string name="settings_nav_bar_style_expanded">Zawsze rozwinięty</string>
-    <string name="settings_nav_bar_style_compact">Zawsze kompaktowy</string>
     <string name="settings_nav_bar_style_classic">Klasyczny</string>
     <string name="settings_card_depth_title">EFEKT GŁĘBI KARTY</string>
     <string name="settings_card_depth_description">Dodaje podświetloną górną krawędź i delikatny połysk do kart graficznych, tworząc subtelne wrażenie głębi.</string>
@@ -2112,7 +2110,6 @@
     <string name="settings_nav_bar_glow_on">Blask włączony</string>
     <string name="settings_nav_bar_glow_off">Blask wyłączony</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
-    <string name="settings_nav_bar_preview_hint">Dotknij paska, aby go wypróbować. Przewiń podgląd, aby sprawdzić adaptacyjny rozmiar.</string>
     <string name="settings_nav_bar_preview_tap_hint">Dotknij paska, aby go wypróbować.</string>
     <string name="settings_homescreen_load_failed_title">Nie udało się załadować katalogów ekranu głównego</string>
     <string name="layout_catalog_type">Pokaż typ katalogu</string>

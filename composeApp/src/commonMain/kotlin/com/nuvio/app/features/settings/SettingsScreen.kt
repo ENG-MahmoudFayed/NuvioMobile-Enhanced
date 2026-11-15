@@ -748,7 +748,6 @@ private fun MobileSettingsScreen(
         NuvioScreen(
             modifier = Modifier.nestedScroll(rootSearchRevealConnection),
             listState = listState,
-            autoHidesNativeTabBar = true,
             topPadding = if (page == SettingsPage.Profile) 0.dp else null,
         ) {
             if (profileDrawsOwnChrome) {

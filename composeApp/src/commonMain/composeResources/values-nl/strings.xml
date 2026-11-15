@@ -669,9 +669,7 @@
     <string name="settings_appearance_app_language_sheet_title">Kies taal</string>
     <string name="settings_appearance_nav_bar_style">Navigatiebalk</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Stijl navigatiebalk</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptief</string>
     <string name="settings_nav_bar_style_expanded">Altijd uitgevouwen</string>
-    <string name="settings_nav_bar_style_compact">Altijd compact</string>
     <string name="settings_nav_bar_style_classic">Klassiek</string>
     <string name="settings_appearance_continue_watching_description">Instellingen voor de sectie Verder kijken.</string>
     <string name="settings_appearance_liquid_glass">Liquid Glass</string>

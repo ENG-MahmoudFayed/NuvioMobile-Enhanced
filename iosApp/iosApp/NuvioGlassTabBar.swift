@@ -2,14 +2,14 @@ import SwiftUI
 import UIKit
 import ComposeApp
 
+/// The bar never shrinks or hides while a page scrolls. Values saved by older builds
+/// ("auto_hide", "morphed") read back as `.static`.
 enum NuvioTabBarBehavior: String, CaseIterable {
     case off
     case `static`
-    case autoHide = "auto_hide"
-    case morphed
 
     static let storageKey = "NuvioNativeTabBarBehavior"
-    static let fallback: NuvioTabBarBehavior = .morphed
+    static let fallback: NuvioTabBarBehavior = .static
 
     static func current() -> NuvioTabBarBehavior {
         guard let raw = UserDefaults.standard.string(forKey: storageKey) else { return fallback }
@@ -17,10 +17,6 @@ enum NuvioTabBarBehavior: String, CaseIterable {
     }
 
     var isEnabled: Bool { self != .off }
-
-    var usesCompactPill: Bool { self == .morphed }
-
-    var respondsToScroll: Bool { self == .autoHide || self == .morphed }
 }
 
 struct NuvioTabBarItemMetrics: Equatable {
@@ -115,9 +111,7 @@ struct NuvioGlassTabBar: View {
 
     private var isCompactHeight: Bool { verticalSizeClass == .compact || isPad }
 
-    private var hidesWhenCollapsed: Bool {
-        isPad && appCoordinator.tabBarBehavior == .autoHide
-    }
+    private var hidesWhenCollapsed: Bool { false }
 
     private var isHidden: Bool { hidesWhenCollapsed && !isExpanded }
 

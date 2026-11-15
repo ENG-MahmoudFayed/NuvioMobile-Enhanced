@@ -548,7 +548,6 @@ fun LibraryScreen(
                 horizontalPadding = 0.dp,
                 topPadding = 0.dp,
                 listState = listState,
-                autoHidesNativeTabBar = true,
             ) {
 
             if (sourceMode == LibraryViewMode.Cloud) {

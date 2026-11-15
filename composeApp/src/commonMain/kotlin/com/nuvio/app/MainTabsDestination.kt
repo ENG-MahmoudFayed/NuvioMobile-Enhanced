@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.core.ui.LocalNuvioBottomNavigationOverlayPadding
@@ -161,7 +160,6 @@ internal fun MainTabsDestination(
                                     Modifier
                                 },
                             )
-                            .then(if (tabsRouteActive && navBarStyleSetting == NavBarStyle.ADAPTIVE) Modifier.nestedScroll(navBarScrollState.nestedScrollConnection) else Modifier)
                             .padding(innerPadding),
                     )
                 }
@@ -180,11 +178,7 @@ internal fun MainTabsDestination(
                 }
 
                 if (floatingBarVisible) {
-                    when (navBarStyleSetting) {
-                        NavBarStyle.EXPANDED -> navBarScrollState.expand()
-                        NavBarStyle.COMPACT -> navBarScrollState.collapse()
-                        else -> {}
-                    }
+                    navBarScrollState.expand()
                     MainFloatingNavigationBar(
                         modifier = Modifier.align(if (floatingBarOnTop) Alignment.TopCenter else Alignment.BottomCenter),
                         scrollState = navBarScrollState,
@@ -410,11 +404,7 @@ internal fun BoxScope.SettingsRouteNavigationBar(
                     defaultIconColorOverride = defaultIconColorOverride,
                 ),
                 modifier = Modifier.align(if (onTop) Alignment.TopCenter else Alignment.BottomCenter),
-                scrollState = if (style == NavBarStyle.COMPACT) {
-                    remember { com.nuvio.app.core.ui.NuvioNavBarScrollState().apply { collapse() } }
-                } else {
-                    null
-                },
+                scrollState = null,
                 backdrop = backdrop,
                 contentPadding = if (onTop) {
                     PaddingValues(

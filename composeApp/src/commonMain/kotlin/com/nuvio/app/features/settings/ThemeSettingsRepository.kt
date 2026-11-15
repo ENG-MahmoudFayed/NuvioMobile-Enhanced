@@ -58,7 +58,7 @@ object ThemeSettingsRepository {
     private val _selectedAppLanguage = MutableStateFlow(AppLanguage.DEVICE)
     val selectedAppLanguage: StateFlow<AppLanguage> = _selectedAppLanguage.asStateFlow()
 
-    private val _navBarStyle = MutableStateFlow(NavBarStyle.ADAPTIVE)
+    private val _navBarStyle = MutableStateFlow(NavBarStyle.EXPANDED)
     val navBarStyle: StateFlow<NavBarStyle> = _navBarStyle.asStateFlow()
 
     private val _navBarPosition = MutableStateFlow(NavBarPosition.BOTTOM)
@@ -129,7 +129,7 @@ object ThemeSettingsRepository {
         navBarDefaultIconColorDraftDirty = false
         _navBarLiquidGlassBarEffects.value = LiquidGlassEffectDefaults.floatingBar
         _navBarLiquidGlassSelectionEffects.value = LiquidGlassEffectDefaults.selectionLens
-        _navBarStyle.value = NavBarStyle.ADAPTIVE
+        _navBarStyle.value = NavBarStyle.EXPANDED
         _navBarPosition.value = NavBarPosition.BOTTOM
         _navBarGlass.value = LiquidGlassStyle.Default
         applyLiquidGlassEffectsEnabled(true)

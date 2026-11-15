@@ -42,17 +42,32 @@ class ThemeSettingsRepositoryTest {
         assertEquals(true, ThemeSettingsRepository.navBarGlowEnabled.value)
 
         ThemeSettingsRepository.setNavBarGlowEnabled(false)
+        ThemeSettingsRepository.setNavBarStyle(NavBarStyle.EXPANDED)
         ThemeSettingsRepository.setNavBarStyle(NavBarStyle.CLASSIC)
-        ThemeSettingsRepository.setNavBarStyle(NavBarStyle.COMPACT)
         ThemeSettingsRepository.clearLocalState()
         ThemeSettingsRepository.ensureLoaded()
 
         assertEquals(false, ThemeSettingsRepository.navBarGlowEnabled.value)
-        assertEquals(NavBarStyle.COMPACT, ThemeSettingsRepository.navBarStyle.value)
+        assertEquals(NavBarStyle.CLASSIC, ThemeSettingsRepository.navBarStyle.value)
 
         ThemeSettingsStorage.replaceFromSyncPayload(kotlinx.serialization.json.buildJsonObject {})
         ThemeSettingsRepository.onProfileChanged()
         assertEquals(true, ThemeSettingsRepository.navBarGlowEnabled.value)
+    }
+
+    @Test
+    fun retiredScrollCollapsingBarsReadBackAsAlwaysVisible() {
+        assertEquals(NavBarStyle.EXPANDED, NavBarStyle.fromKey("adaptive"))
+        assertEquals(NavBarStyle.EXPANDED, NavBarStyle.fromKey("compact"))
+        assertEquals(NavBarStyle.EXPANDED, NavBarStyle.fromKey(null))
+        assertEquals(NuvioTabBarBehavior.STATIC, NuvioTabBarBehavior.fromKey("morphed"))
+        assertEquals(NuvioTabBarBehavior.STATIC, NuvioTabBarBehavior.fromKey("auto_hide"))
+        assertEquals(NuvioTabBarBehavior.OFF, NuvioTabBarBehavior.fromKey("off"))
+
+        ThemeSettingsStorage.saveTabBarBehavior("morphed")
+        ThemeSettingsRepository.clearLocalState()
+        ThemeSettingsRepository.ensureLoaded()
+        assertEquals(NuvioTabBarBehavior.STATIC, ThemeSettingsRepository.tabBarBehavior.value)
     }
 
     @Test

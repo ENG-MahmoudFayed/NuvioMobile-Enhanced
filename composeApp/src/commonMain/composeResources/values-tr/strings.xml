@@ -593,9 +593,7 @@
     <string name="settings_appearance_app_language_sheet_title">Dil seç</string>
     <string name="settings_appearance_nav_bar_style">Gezinme Çubuğu</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">Gezinme Çubuğu Stili</string>
-    <string name="settings_nav_bar_style_adaptive">Uyumlu</string>
     <string name="settings_nav_bar_style_expanded">Her Zaman Genişletilmiş</string>
-    <string name="settings_nav_bar_style_compact">Her Zaman Sıkıştırılmış</string>
     <string name="settings_nav_bar_style_classic">Klasik</string>
     <string name="settings_appearance_continue_watching_description">İzlemeye Devam Et rafını göster, gizle ve stilini ayarla.</string>
     <string name="settings_appearance_liquid_glass">Liquid Glass</string>

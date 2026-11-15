@@ -284,7 +284,6 @@ fun SearchScreen(
                 horizontalPadding = 0.dp,
                 topPadding = 0.dp,
                 listState = listState,
-                autoHidesNativeTabBar = true,
                 modifier = Modifier.weight(1f),
             ) {
                 if (query.isBlank()) {

@@ -1676,11 +1676,8 @@ Du bruker denne funksjonen helt på eget ansvar. P2P kan deaktiveres når som he
     <string name="settings_nav_bar_glow_description">Legger til mykt lys rundt den flytende linjen.</string>
     <string name="settings_nav_bar_glow_off">Glød av</string>
     <string name="settings_nav_bar_glow_on">Glød på</string>
-    <string name="settings_nav_bar_preview_hint">Trykk på linjen for å prøve. Rull forhåndsvisningen for å prøve adaptiv størrelse.</string>
     <string name="settings_nav_bar_preview_tap_hint">Trykk på linjen for å prøve.</string>
-    <string name="settings_nav_bar_style_adaptive">Adaptiv</string>
     <string name="settings_nav_bar_style_classic">Klassisk</string>
-    <string name="settings_nav_bar_style_compact">Alltid kompakt</string>
     <string name="settings_nav_bar_style_expanded">Alltid utvidet</string>
     <string name="settings_nav_bar_summary">%1$s · %2$s</string>
     <string name="settings_notifications_disabled_in_app">Varsler er for øyeblikket deaktivert i Flowix.</string>

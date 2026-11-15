@@ -157,7 +157,6 @@ internal fun MyFlowixScreen(
         modifier = modifier,
         horizontalPadding = 0.dp,
         listState = listState,
-        autoHidesNativeTabBar = true,
     ) {
         item(key = "my_flowix_header") {
             MyFlowixHeader(

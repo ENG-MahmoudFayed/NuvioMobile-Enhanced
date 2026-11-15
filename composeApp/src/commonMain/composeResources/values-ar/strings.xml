@@ -606,9 +606,7 @@
     <string name="settings_appearance_app_language_sheet_title">اختيار اللغة</string>
     <string name="settings_appearance_nav_bar_style">شريط التنقل</string>
     <string name="settings_appearance_nav_bar_style_sheet_title">نمط شريط التنقل</string>
-    <string name="settings_nav_bar_style_adaptive">متكيف</string>
     <string name="settings_nav_bar_style_expanded">موسّع دائمًا</string>
-    <string name="settings_nav_bar_style_compact">مدمج دائمًا</string>
     <string name="settings_nav_bar_style_classic">كلاسيكي</string>
     <string name="settings_appearance_continue_watching_description">إعدادات قسم متابعة المشاهدة.</string>
     <string name="settings_appearance_liquid_glass">الزجاج السائل</string>

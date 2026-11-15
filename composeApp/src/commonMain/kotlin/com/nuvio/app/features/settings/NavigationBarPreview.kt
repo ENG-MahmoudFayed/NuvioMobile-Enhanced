@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.FloatingNavigationBar
 import com.nuvio.app.core.ui.glass.LiquidGlassEffectDefaults
@@ -65,7 +64,7 @@ internal fun NavigationBarPreview(
     val pillOnTop = topPill || (style != NavBarStyle.CLASSIC && position == NavBarPosition.TOP)
     val barScrollState = remember(style, topPill) {
         NuvioNavBarScrollState().apply {
-            if (topPill || style == NavBarStyle.COMPACT) collapse()
+            if (topPill) collapse()
         }
     }
     var selectedIndex by remember { mutableIntStateOf(0) }
@@ -84,7 +83,6 @@ internal fun NavigationBarPreview(
             Column(
                 Modifier.matchParentSize()
                     .nuvioBackdropSource(previewBackdrop)
-                    .then(if (!topPill && style == NavBarStyle.ADAPTIVE) Modifier.nestedScroll(barScrollState.nestedScrollConnection) else Modifier)
                     .verticalScroll(rememberScrollState())
                     .background(tokens.colors.surfaceCard)
                     .padding(12.dp),
@@ -152,10 +150,7 @@ internal fun NavigationBarPreview(
             }
         }
         Text(
-            text = stringResource(
-                if (!topPill && style == NavBarStyle.ADAPTIVE) Res.string.settings_nav_bar_preview_hint
-                else Res.string.settings_nav_bar_preview_tap_hint,
-            ),
+            text = stringResource(Res.string.settings_nav_bar_preview_tap_hint),
             style = MaterialTheme.typography.bodySmall,
             color = tokens.colors.textMuted,
             modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
