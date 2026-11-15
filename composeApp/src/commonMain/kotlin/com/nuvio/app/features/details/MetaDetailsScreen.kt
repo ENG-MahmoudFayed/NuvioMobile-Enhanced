@@ -1,5 +1,8 @@
 package com.nuvio.app.features.details
 
+import com.nuvio.app.core.ui.CinemaEmptyState
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.WifiOff
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.mutableStateMapOf
@@ -474,37 +477,22 @@ fun MetaDetailsScreen(
             }
 
             displayedMeta == null && uiState.errorMessage != null -> {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.details_failed_to_load),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                    Text(
-                        text = when (networkStatusUiState.condition) {
-                            NetworkCondition.NoInternet -> stringResource(Res.string.details_check_connection)
-                            NetworkCondition.ServersUnreachable -> stringResource(Res.string.details_servers_unreachable)
-                            else -> uiState.errorMessage.orEmpty()
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            NetworkStatusRepository.requestRefresh(force = true)
-                            MetaDetailsRepository.load(type, id)
-                        },
-                    ) {
-                        Text(stringResource(Res.string.action_retry))
-                    }
-                }
+                val offline = networkStatusUiState.condition == NetworkCondition.NoInternet
+                CinemaEmptyState(
+                    icon = if (offline) Icons.Outlined.WifiOff else Icons.Outlined.ErrorOutline,
+                    title = stringResource(Res.string.details_failed_to_load),
+                    message = when (networkStatusUiState.condition) {
+                        NetworkCondition.NoInternet -> stringResource(Res.string.details_check_connection)
+                        NetworkCondition.ServersUnreachable -> stringResource(Res.string.details_servers_unreachable)
+                        else -> uiState.errorMessage.orEmpty()
+                    },
+                    actionLabel = stringResource(Res.string.action_retry),
+                    onAction = {
+                        NetworkStatusRepository.requestRefresh(force = true)
+                        MetaDetailsRepository.load(type, id)
+                    },
+                    modifier = Modifier.align(Alignment.Center),
+                )
             }
 
             displayedMeta != null -> {
