@@ -1,8 +1,9 @@
 package com.nuvio.app.core.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -15,9 +16,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -26,6 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -33,8 +39,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,39 +55,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 
-/**
+/*
  * The building blocks of the Cinema look: black ground, white and grey pills, one red action,
- * rounded-square profile avatars. Screens take their colours from here so the look stays one
- * system instead of a hex value per file.
+ * rounded-square profile avatars. Values come from CinemaTheme.kt.
  */
-internal object CinemaColors {
-    val Red = Color(0xFFE50914)
-    val RedPressed = Color(0xFFB20710)
-    val Pill = Color(0xFF2B2B2B)
-    val PillOnImage = Color(0xB36D6D6E)
-    val PillBorder = Color(0x33FFFFFF)
-    val Field = Color(0xFF161616)
-    val FieldBorder = Color(0xFF5A5A5A)
-    val TextSecondary = Color(0xFFB3B3B3)
-    val TextMuted = Color(0xFF8C8C8C)
-    val Sheet = Color(0xFF232323)
-    val SheetRow = Color(0xFF2B2B2B)
-    val Card = Color(0xFF141414)
-    val CardBorder = Color(0xFF333333)
-    val ProgressTrack = Color(0xFF5A5A5A)
-}
 
-internal val CinemaProfileAvatarShape = RoundedCornerShape(percent = 12)
-internal val CinemaBlockButtonShape = RoundedCornerShape(4.dp)
-internal val CinemaCategoryPillShape = RoundedCornerShape(12.dp)
+internal val CinemaProfileAvatarShape = CinemaShapes.ProfileAvatar
+internal val CinemaBlockButtonShape = CinemaShapes.Pill
+internal val CinemaCategoryPillShape = RoundedCornerShape(CinemaRadius.Card)
 
 internal enum class CinemaPillStyle { White, Grey, GreyOnImage }
 
@@ -90,7 +87,7 @@ internal fun CinemaPillButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     style: CinemaPillStyle = CinemaPillStyle.White,
-    height: Dp = 48.dp,
+    height: Dp = CinemaSize.ButtonHeight,
     enabled: Boolean = true,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -104,7 +101,7 @@ internal fun CinemaPillButton(
         modifier = modifier
             .pressScale(interaction)
             .height(height)
-            .clip(CircleShape)
+            .clip(CinemaShapes.Pill)
             .background(if (enabled) container else container.copy(alpha = 0.5f))
             .clickable(
                 interactionSource = interaction,
@@ -113,19 +110,18 @@ internal fun CinemaPillButton(
                 role = Role.Button,
                 onClick = onClick,
             )
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = CinemaSpace.s16),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(26.dp))
-            Spacer(Modifier.width(10.dp))
+            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(CinemaSize.Icon))
+            Spacer(Modifier.width(CinemaSpace.s8))
         }
         Text(
             text = text,
+            style = CinemaType.button,
             color = content,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -149,8 +145,8 @@ internal fun CinemaBlockButton(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .pressScale(interaction, pressedScale = 0.98f)
-            .height(54.dp)
+            .pressScale(interaction)
+            .height(CinemaSize.ButtonHeight)
             .clip(CinemaBlockButtonShape)
             .background(if (enabled) container else container.copy(alpha = 0.55f))
             .clickable(
@@ -167,13 +163,13 @@ internal fun CinemaBlockButton(
             CircularProgressIndicator(
                 color = content,
                 strokeWidth = 2.dp,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(CinemaSize.IconSmall),
             )
         } else {
-            Text(text = text, color = content, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(text = text, style = CinemaType.button, color = content)
             if (trailingIcon != null) {
-                Spacer(Modifier.width(12.dp))
-                Icon(trailingIcon, contentDescription = null, tint = content, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(CinemaSpace.s12))
+                Icon(trailingIcon, contentDescription = null, tint = content, modifier = Modifier.size(CinemaSize.Icon))
             }
         }
     }
@@ -191,12 +187,13 @@ internal fun CinemaCategoryPill(
     val interaction = remember { MutableInteractionSource() }
     val border by animateColorAsState(
         if (selected) Color.White else CinemaColors.PillBorder,
+        animationSpec = CinemaMotion.micro(),
         label = "cinema_pill_border",
     )
     Row(
         modifier = modifier
             .pressScale(interaction)
-            .heightIn(min = 40.dp)
+            .heightIn(min = CinemaSize.MinTouchTarget)
             .clip(CinemaCategoryPillShape)
             .background(if (selected) Color.White.copy(alpha = 0.18f) else CinemaColors.PillOnImage.copy(alpha = 0.45f))
             .border(1.dp, border, CinemaCategoryPillShape)
@@ -206,23 +203,21 @@ internal fun CinemaCategoryPill(
                 role = Role.Button,
                 onClick = onClick,
             )
-            .padding(horizontal = 16.dp, vertical = 9.dp),
+            .padding(horizontal = CinemaSpace.s16, vertical = CinemaSpace.s8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = text,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CinemaType.cardTitle,
             maxLines = 1,
         )
         if (showsDropdown) {
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(CinemaSpace.s4))
             Icon(
                 Icons.Rounded.KeyboardArrowDown,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(CinemaSize.IconSmall),
             )
         }
     }
@@ -239,7 +234,7 @@ internal fun CinemaClearPill(
     Box(
         modifier = modifier
             .pressScale(interaction)
-            .size(40.dp)
+            .size(CinemaSize.MinTouchTarget)
             .clip(CircleShape)
             .background(CinemaColors.PillOnImage.copy(alpha = 0.45f))
             .border(1.dp, CinemaColors.PillBorder, CircleShape)
@@ -251,7 +246,7 @@ internal fun CinemaClearPill(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Rounded.Close, contentDescription = contentDescription, tint = Color.White, modifier = Modifier.size(20.dp))
+        Icon(Icons.Rounded.Close, contentDescription = contentDescription, tint = Color.White, modifier = Modifier.size(CinemaSize.IconSmall))
     }
 }
 
@@ -263,13 +258,14 @@ internal fun CinemaTopBar(
     leading: (@Composable () -> Unit)? = null,
     titleTrailing: (@Composable () -> Unit)? = null,
     onTitleClick: (() -> Unit)? = null,
+    onTitleClickLabel: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .padding(start = 16.dp, end = 8.dp),
+            .heightIn(min = 56.dp)
+            .padding(start = CinemaSpace.PageMargin, end = CinemaSpace.s8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -277,12 +273,15 @@ internal fun CinemaTopBar(
                 .weight(1f)
                 .then(
                     if (onTitleClick != null) {
-                        Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            role = Role.Button,
-                            onClick = onTitleClick,
-                        )
+                        Modifier
+                            .heightIn(min = CinemaSize.MinTouchTarget)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClickLabel = onTitleClickLabel,
+                                role = Role.Button,
+                                onClick = onTitleClick,
+                            )
                     } else {
                         Modifier
                     },
@@ -291,20 +290,17 @@ internal fun CinemaTopBar(
         ) {
             if (leading != null) {
                 leading()
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(CinemaSpace.s12))
             }
             Text(
                 text = title,
-                color = Color.White,
-                fontSize = 30.sp,
-                lineHeight = 34.sp,
-                fontWeight = FontWeight.Bold,
+                style = CinemaType.screenTitle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
             if (titleTrailing != null) {
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(CinemaSpace.s4))
                 titleTrailing()
             }
         }
@@ -312,7 +308,7 @@ internal fun CinemaTopBar(
     }
 }
 
-/** A plain white icon in a thumb-sized target, for the top bar. */
+/** A plain white icon in a thumb-sized target, for top bars and cards. */
 @Composable
 internal fun CinemaIconAction(
     icon: ImageVector,
@@ -320,13 +316,13 @@ internal fun CinemaIconAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = Color.White,
-    size: Dp = 28.dp,
+    size: Dp = 26.dp,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .pressScale(interaction)
-            .size(48.dp)
+            .size(CinemaSize.MinTouchTarget + 4.dp)
             .clip(CircleShape)
             .clickable(
                 interactionSource = interaction,
@@ -340,14 +336,96 @@ internal fun CinemaIconAction(
     }
 }
 
+/** Section heading on one line that shrinks down to 85% before it truncates. */
+@Composable
+internal fun CinemaSectionTitle(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    val style = CinemaType.sectionTitle
+    BasicText(
+        text = text,
+        style = style,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = TextAutoSize.StepBased(
+            minFontSize = style.fontSize * 0.85f,
+            maxFontSize = style.fontSize,
+            stepSize = 0.5.sp,
+        ),
+        modifier = modifier,
+    )
+}
+
+/**
+ * A remote picture with a dark placeholder while it loads, a 0.2 s fade once it arrives, and the
+ * title written in its place if it never does. The picture is cropped, never stretched.
+ */
+@Composable
+internal fun CinemaAsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    fallbackTitle: String? = null,
+    contentScale: ContentScale = ContentScale.Crop,
+    placeholderColor: Color = CinemaColors.Surface,
+    overlay: @Composable BoxScope.() -> Unit = {},
+) {
+    var failed by remember(model) { mutableStateOf(model == null) }
+    val alpha = remember(model) { Animatable(0f) }
+    var loaded by remember(model) { mutableStateOf(false) }
+    LaunchedEffect(loaded) {
+        if (loaded) alpha.animateTo(1f, tween(200))
+    }
+    Box(
+        modifier = modifier.background(placeholderColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (model != null && !failed) {
+            AsyncImage(
+                model = model,
+                contentDescription = contentDescription,
+                contentScale = contentScale,
+                onSuccess = { loaded = true },
+                onError = { failed = true },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { this.alpha = alpha.value },
+            )
+        }
+        if (failed && !fallbackTitle.isNullOrBlank()) {
+            Text(
+                text = fallbackTitle,
+                style = CinemaType.cardTitle.copy(color = CinemaColors.TextSecondary),
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(CinemaSpace.s12),
+            )
+        }
+        overlay()
+    }
+}
+
 /** White-ringed play button laid over artwork or beside a search result. */
 @Composable
 internal fun CinemaPlayCircle(
     modifier: Modifier = Modifier,
     size: Dp = 52.dp,
     filled: Boolean = true,
+    contentDescription: String? = null,
 ) {
-    Canvas(modifier = modifier.size(size)) {
+    Canvas(
+        modifier = modifier
+            .size(size)
+            .then(
+                if (contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            ),
+    ) {
         val stroke = this.size.minDimension * 0.05f
         val radius = this.size.minDimension / 2f - stroke / 2f
         if (filled) {
@@ -366,24 +444,32 @@ internal fun CinemaPlayCircle(
     }
 }
 
-/** Red spinner with a fading tail, shown while a profile loads. */
+/** Red arc with a fading tail, turning once a second, shown while a profile loads. */
 @Composable
 internal fun CinemaRedSpinner(
     modifier: Modifier = Modifier,
-    size: Dp = 72.dp,
-    strokeWidth: Dp = 8.dp,
+    size: Dp = 64.dp,
+    strokeWidth: Dp = 6.dp,
 ) {
+    val reduceMotion = rememberReduceMotion()
     val transition = rememberInfiniteTransition(label = "cinema_spinner")
     val rotation by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Restart),
         label = "cinema_spinner_rotation",
+    )
+    val pulse by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+        label = "cinema_spinner_pulse",
     )
     Canvas(
         modifier = modifier
             .size(size)
-            .rotate(rotation),
+            .rotate(if (reduceMotion) 0f else rotation)
+            .graphicsLayer { alpha = if (reduceMotion) pulse else 1f },
     ) {
         val strokePx = strokeWidth.toPx()
         val inset = strokePx / 2f
@@ -419,9 +505,14 @@ internal fun CinemaPagerDots(
         repeat(count) { index ->
             val color by animateColorAsState(
                 if (index == current) Color.White else Color(0xFF6E6E6E),
+                animationSpec = CinemaMotion.micro(),
                 label = "cinema_dot_color",
             )
-            val dotSize by animateDpAsState(if (index == current) 10.dp else 9.dp, label = "cinema_dot_size")
+            val dotSize by animateDpAsState(
+                if (index == current) 10.dp else 8.dp,
+                animationSpec = CinemaMotion.micro(),
+                label = "cinema_dot_size",
+            )
             Box(
                 Modifier
                     .size(dotSize)
@@ -432,23 +523,33 @@ internal fun CinemaPagerDots(
     }
 }
 
-/** Thin red progress line over a grey track, as under Continue Watching posters. */
+/**
+ * Thin red progress line over a grey track, as under Continue Watching posters. It fills from
+ * the left the first time it appears.
+ */
 @Composable
 internal fun CinemaProgressLine(
     progress: Float,
     modifier: Modifier = Modifier,
     height: Dp = 4.dp,
+    rounded: Boolean = true,
 ) {
+    val reduceMotion = rememberReduceMotion()
+    val target = progress.coerceIn(0f, 1f)
+    val fill = remember { Animatable(if (reduceMotion) target else 0f) }
+    LaunchedEffect(target) {
+        fill.animateTo(target, CinemaMotion.standard())
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(CircleShape)
+            .clip(if (rounded) CircleShape else RoundedCornerShape(0.dp))
             .background(CinemaColors.ProgressTrack),
     ) {
         Box(
             Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxWidth(fill.value)
                 .height(height)
                 .background(CinemaColors.Red),
         )
@@ -466,11 +567,91 @@ internal fun CinemaPosterTag(
         color = Color.White,
         fontSize = 11.sp,
         lineHeight = 13.sp,
-        fontWeight = FontWeight.Bold,
+        style = CinemaType.caption.copy(color = Color.White),
         maxLines = 1,
         modifier = modifier
             .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
             .background(CinemaColors.Red)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = CinemaSpace.s8, vertical = 3.dp),
     )
+}
+
+/** Grey block that a list shows while its rows load; it carries the shared shimmer. */
+@Composable
+internal fun CinemaSkeletonBlock(
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = CinemaShapes.Poster,
+) {
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(rememberCinemaShimmerBrush()),
+    )
+}
+
+/**
+ * The loading shimmer: a soft highlight sweeping left to right every 1.2 s. With Reduce Motion it
+ * stays still.
+ */
+@Composable
+internal fun rememberCinemaShimmerBrush(): Brush {
+    val reduceMotion = rememberReduceMotion()
+    val base = CinemaColors.Surface
+    val highlight = Color(0xFF262626)
+    if (reduceMotion) return Brush.linearGradient(listOf(base, base))
+    val transition = rememberInfiniteTransition(label = "cinema_shimmer")
+    val sweep by transition.animateFloat(
+        initialValue = -400f,
+        targetValue = 1400f,
+        animationSpec = infiniteRepeatable(
+            tween(durationMillis = CinemaMotion.SkeletonSweepMillis, easing = LinearEasing),
+            RepeatMode.Restart,
+        ),
+        label = "cinema_shimmer_sweep",
+    )
+    return Brush.linearGradient(
+        colors = listOf(base, highlight, base),
+        start = Offset(sweep, 0f),
+        end = Offset(sweep + 400f, 0f),
+    )
+}
+
+/** Empty state: an outline icon, one bold line and a softer hint, centred. */
+@Composable
+internal fun CinemaEmptyState(
+    icon: ImageVector,
+    title: String,
+    message: String,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    androidx.compose.foundation.layout.Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = CinemaSpace.s32, vertical = CinemaSpace.s32),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(CinemaSpace.s12),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(CinemaColors.SurfaceElevated),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = CinemaColors.TextSecondary, modifier = Modifier.size(34.dp))
+        }
+        Text(text = title, style = CinemaType.sectionTitle, textAlign = TextAlign.Center)
+        Text(text = message, style = CinemaType.body.copy(color = CinemaColors.TextSecondary), textAlign = TextAlign.Center)
+        if (actionLabel != null && onAction != null) {
+            Spacer(Modifier.height(CinemaSpace.s4))
+            CinemaPillButton(
+                text = actionLabel,
+                onClick = onAction,
+                style = CinemaPillStyle.White,
+                modifier = Modifier.defaultMinSize(minWidth = 140.dp),
+            )
+        }
+    }
 }
