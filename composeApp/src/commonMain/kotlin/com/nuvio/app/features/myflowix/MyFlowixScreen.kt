@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.nuvio.app.AppLoadingProfileAvatar
 import com.nuvio.app.core.auth.AuthRepository
+import com.nuvio.app.core.ui.CinemaAsyncImage
 import com.nuvio.app.core.ui.CinemaColors
 import com.nuvio.app.core.ui.CinemaIconAction
 import com.nuvio.app.core.ui.CinemaSectionTitle
@@ -468,16 +469,15 @@ private fun RecentlyWatchedRow(
                             role = Role.Button,
                         ) { onClick(entry) },
                 ) {
-                    AsyncImage(
+                    CinemaAsyncImage(
                         model = entry.episodeThumbnail?.takeIf { it.isNotBlank() }
                             ?: entry.background?.takeIf { it.isNotBlank() }
                             ?: entry.poster,
                         contentDescription = entry.title,
+                        fallbackTitle = entry.title,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .background(tokens.colors.surfaceCard),
-                        contentScale = ContentScale.Crop,
+                            .aspectRatio(16f / 9f),
                     )
                     Text(
                         text = label,

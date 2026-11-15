@@ -179,28 +179,27 @@ fun NuvioPosterCard(
                         coil3.request.ImageRequest.Builder(platformContext)
                             .data(imageUrl)
                             .memoryCacheKeyExtras(
-                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to fallbackImageUrl!!)
+                                mapOf(com.nuvio.app.core.poster.CustomPosterFallbackInterceptor.FALLBACK_URL_KEY to fallbackImageUrl.orEmpty())
                             )
                             .build()
                     } else {
                         imageUrl
                     }
                 }
-                AsyncImage(
+                CinemaAsyncImage(
                     model = imageModel,
                     contentDescription = title,
+                    fallbackTitle = title,
+                    placeholderColor = tokens.colors.surface,
                     modifier = Modifier.matchParentSize(),
-                    contentScale = ContentScale.Crop,
                 )
             } else {
-                Text(
-                    text = title,
-                    modifier = Modifier.padding(horizontal = NuvioTokens.Space.s14),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = tokens.colors.textMuted,
-                    textAlign = TextAlign.Center,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
+                CinemaAsyncImage(
+                    model = null,
+                    contentDescription = title,
+                    fallbackTitle = title,
+                    placeholderColor = tokens.colors.surface,
+                    modifier = Modifier.matchParentSize(),
                 )
             }
 

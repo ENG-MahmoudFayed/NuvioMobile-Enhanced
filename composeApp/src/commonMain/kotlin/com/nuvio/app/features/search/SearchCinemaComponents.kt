@@ -50,7 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.nuvio.app.core.ui.CinemaAsyncImage
 import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.CinemaShapes
 import com.nuvio.app.core.ui.CinemaPlayCircle
 import com.nuvio.app.core.ui.CinemaSectionTitle
 import com.nuvio.app.core.ui.pressScale
@@ -192,22 +194,15 @@ internal fun SearchRecommendationRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(
+        CinemaAsyncImage(
+            model = artwork,
+            contentDescription = null,
+            fallbackTitle = item.name,
             modifier = Modifier
                 .width(150.dp)
                 .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(4.dp))
-                .background(CinemaColors.Sheet),
-        ) {
-            if (artwork != null) {
-                AsyncImage(
-                    model = artwork,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-        }
+                .clip(CinemaShapes.Poster),
+        )
         Text(
             text = item.name,
             color = Color.White,
