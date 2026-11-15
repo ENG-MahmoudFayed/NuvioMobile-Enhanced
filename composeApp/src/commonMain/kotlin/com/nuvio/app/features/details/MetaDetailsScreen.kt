@@ -1,5 +1,15 @@
 package com.nuvio.app.features.details
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.IntOffset
+import com.nuvio.app.core.ui.CinemaMotion
+import kotlin.math.roundToInt
 import com.nuvio.app.core.ui.CinemaSkeletonBlock
 import com.nuvio.app.core.ui.CinemaShapes
 import com.nuvio.app.core.ui.CinemaSize
@@ -2696,41 +2706,68 @@ private fun TabbedSectionGroup(
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             )
 
-            // The active tab wears a short red bar above its title.
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(28.dp),
-                verticalAlignment = Alignment.Top,
-            ) {
-                tabs.forEachIndexed { index, (_, title) ->
-                    val selected = index == selectedIndex
-                    Column(
-                        modifier = Modifier
-                            .width(IntrinsicSize.Max)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                role = Role.Tab,
-                            ) { selectedIndex = index },
-                    ) {
-                        Box(
+            // A red bar over the active title slides from tab to tab on a spring.
+            val density = LocalDensity.current
+            val haptics = LocalHapticFeedback.current
+            val tabBounds = remember(tabs) { mutableStateMapOf<Int, Pair<Float, Float>>() }
+            val selectedBounds = tabBounds[selectedIndex]
+            val indicatorX by animateFloatAsState(
+                targetValue = selectedBounds?.first ?: 0f,
+                animationSpec = CinemaMotion.spring(),
+                label = "detail_tab_indicator_x",
+            )
+            val indicatorWidth by animateFloatAsState(
+                targetValue = selectedBounds?.second ?: 0f,
+                animationSpec = CinemaMotion.spring(),
+                label = "detail_tab_indicator_width",
+            )
+            Box(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(28.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    tabs.forEachIndexed { index, (_, title) ->
+                        val selected = index == selectedIndex
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(5.dp)
-                                .background(if (selected) CinemaColors.Red else Color.Transparent),
-                        )
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Text(
-                            text = title,
-                            style = headerStyle,
-                            color = if (selected) {
-                                headerColor
-                            } else {
-                                headerColor.copy(alpha = 0.6f)
-                            },
-                            maxLines = 1,
-                        )
+                                .width(IntrinsicSize.Max)
+                                .heightIn(min = CinemaSize.MinTouchTarget)
+                                .onGloballyPositioned { coordinates ->
+                                    tabBounds[index] = coordinates.positionInParent().x to coordinates.size.width.toFloat()
+                                }
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    role = Role.Tab,
+                                ) {
+                                    if (selectedIndex != index) {
+                                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                    }
+                                    selectedIndex = index
+                                },
+                        ) {
+                            Spacer(modifier = Modifier.height(19.dp))
+                            Text(
+                                text = title,
+                                style = headerStyle,
+                                color = if (selected) {
+                                    headerColor
+                                } else {
+                                    headerColor.copy(alpha = 0.6f)
+                                },
+                                maxLines = 1,
+                            )
+                        }
                     }
+                }
+                if (selectedBounds != null) {
+                    Box(
+                        modifier = Modifier
+                            .offset { IntOffset(indicatorX.roundToInt(), 0) }
+                            .width(with(density) { indicatorWidth.toDp() })
+                            .height(5.dp)
+                            .background(CinemaColors.Red),
+                    )
                 }
             }
         }
