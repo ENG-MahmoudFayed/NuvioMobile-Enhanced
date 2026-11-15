@@ -154,98 +154,98 @@ internal fun HomeCinemaHeader(
     val scope = rememberCoroutineScope()
 
     Box(modifier = modifier.fillMaxWidth()) {
-    // The blurred page sits behind the bar and fades in with it; the title stays fully opaque.
-    Box(
-        Modifier
-            .matchParentSize()
-            .liquidGlassBlur(backdrop = backdrop, radius = 24.dp, alphaProvider = { barAlpha }),
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    0f to Color(0xFF1A1A1A).copy(alpha = 0.55f + 0.4f * barAlpha),
-                    1f to Color(0xFF121212).copy(alpha = 0.92f * barAlpha),
-                ),
-            )
-            .nuvioConsumePointerEvents()
-            .padding(top = statusBarTop),
-    ) {
-        CinemaTopBar(
-            title = title,
-            leading = { AppBrandMark(modifier = Modifier.size(34.dp)) },
-            actions = {
-                if (onDownloadsClick != null) {
-                    CinemaIconAction(
-                        icon = Icons.Outlined.FileDownload,
-                        contentDescription = stringResource(Res.string.home_action_downloads),
-                        onClick = onDownloadsClick,
-                    )
-                }
-                if (onNotificationsClick != null) {
-                    CinemaIconAction(
-                        icon = Icons.Outlined.Notifications,
-                        contentDescription = stringResource(Res.string.home_action_notifications),
-                        onClick = onNotificationsClick,
-                    )
-                }
-            },
+        // The blurred page sits behind the bar and fades in with it; the title stays fully opaque.
+        Box(
+            Modifier
+                .matchParentSize()
+                .liquidGlassBlur(backdrop = backdrop, radius = 24.dp, alphaProvider = { barAlpha }),
         )
-        AnimatedVisibility(
-            visible = pillsVisible,
-            enter = expandVertically(tween(250)) + slideInVertically(tween(250)) { -it / 2 } + fadeIn(tween(250)),
-            exit = shrinkVertically(tween(250)) + slideOutVertically(tween(250)) { -it / 2 } + fadeOut(tween(200)),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color(0xFF1A1A1A).copy(alpha = 0.55f + 0.4f * barAlpha),
+                        1f to Color(0xFF121212).copy(alpha = 0.92f * barAlpha),
+                    ),
+                )
+                .nuvioConsumePointerEvents()
+                .padding(top = statusBarTop),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HomeCinemaHeaderHeight - 56.dp)
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            CinemaTopBar(
+                title = title,
+                leading = { AppBrandMark(modifier = Modifier.size(34.dp)) },
+                actions = {
+                    if (onDownloadsClick != null) {
+                        CinemaIconAction(
+                            icon = Icons.Outlined.FileDownload,
+                            contentDescription = stringResource(Res.string.home_action_downloads),
+                            onClick = onDownloadsClick,
+                        )
+                    }
+                    if (onNotificationsClick != null) {
+                        CinemaIconAction(
+                            icon = Icons.Outlined.Notifications,
+                            contentDescription = stringResource(Res.string.home_action_notifications),
+                            onClick = onNotificationsClick,
+                        )
+                    }
+                },
+            )
+            AnimatedVisibility(
+                visible = pillsVisible,
+                enter = expandVertically(tween(250)) + slideInVertically(tween(250)) { -it / 2 } + fadeIn(tween(250)),
+                exit = shrinkVertically(tween(250)) + slideOutVertically(tween(250)) { -it / 2 } + fadeOut(tween(200)),
             ) {
-                if (filter.isActive) {
-                    CinemaClearPill(
-                        contentDescription = stringResource(Res.string.home_filter_clear),
-                        onClick = { onFilterChange(HomeContentFilter()) },
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(HomeCinemaHeaderHeight - 56.dp)
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (filter.isActive) {
+                        CinemaClearPill(
+                            contentDescription = stringResource(Res.string.home_filter_clear),
+                            onClick = { onFilterChange(HomeContentFilter()) },
+                        )
+                    }
+                    if (filter.type != HomeTypeFilter.Movies) {
+                        CinemaCategoryPill(
+                            text = stringResource(Res.string.home_filter_shows),
+                            selected = filter.type == HomeTypeFilter.Shows,
+                            onClick = {
+                                onFilterChange(
+                                    filter.copy(type = if (filter.type == HomeTypeFilter.Shows) null else HomeTypeFilter.Shows),
+                                )
+                            },
+                        )
+                    }
+                    if (filter.type != HomeTypeFilter.Shows) {
+                        CinemaCategoryPill(
+                            text = stringResource(Res.string.home_filter_movies),
+                            selected = filter.type == HomeTypeFilter.Movies,
+                            onClick = {
+                                onFilterChange(
+                                    filter.copy(type = if (filter.type == HomeTypeFilter.Movies) null else HomeTypeFilter.Movies),
+                                )
+                            },
+                        )
+                    }
+                    if (genreOptions.isNotEmpty()) {
+                        CinemaCategoryPill(
+                            text = filter.genre ?: stringResource(Res.string.home_filter_categories),
+                            selected = filter.genre != null,
+                            showsDropdown = true,
+                            onClick = { categoriesOpen = true },
+                        )
+                    }
+                    Spacer(Modifier.size(6.dp))
                 }
-                if (filter.type != HomeTypeFilter.Movies) {
-                    CinemaCategoryPill(
-                        text = stringResource(Res.string.home_filter_shows),
-                        selected = filter.type == HomeTypeFilter.Shows,
-                        onClick = {
-                            onFilterChange(
-                                filter.copy(type = if (filter.type == HomeTypeFilter.Shows) null else HomeTypeFilter.Shows),
-                            )
-                        },
-                    )
-                }
-                if (filter.type != HomeTypeFilter.Shows) {
-                    CinemaCategoryPill(
-                        text = stringResource(Res.string.home_filter_movies),
-                        selected = filter.type == HomeTypeFilter.Movies,
-                        onClick = {
-                            onFilterChange(
-                                filter.copy(type = if (filter.type == HomeTypeFilter.Movies) null else HomeTypeFilter.Movies),
-                            )
-                        },
-                    )
-                }
-                if (genreOptions.isNotEmpty()) {
-                    CinemaCategoryPill(
-                        text = filter.genre ?: stringResource(Res.string.home_filter_categories),
-                        selected = filter.genre != null,
-                        showsDropdown = true,
-                        onClick = { categoriesOpen = true },
-                    )
-                }
-                Spacer(Modifier.size(6.dp))
             }
         }
-    }
     }
 
     if (categoriesOpen) {
