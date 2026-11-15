@@ -2482,4 +2482,8 @@
     <string name="details_seasons_count">%1$d stagioni</string>
     <string name="details_season_single">1 stagione</string>
     <string name="details_episodes">Episodi</string>
+    <string name="a11y_more_info">Altre informazioni</string>
+    <string name="a11y_more_options">Altre opzioni</string>
+    <string name="a11y_mute">Disattiva audio</string>
+    <string name="a11y_unmute">Attiva audio</string>
 </resources>

@@ -1135,7 +1135,7 @@ private fun ContinueWatchingPosterCard(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Info,
-                    contentDescription = item.title,
+                    contentDescription = stringResource(Res.string.a11y_more_info),
                     tint = Color.White,
                     modifier = Modifier.size(26.dp),
                 )
@@ -1155,7 +1155,7 @@ private fun ContinueWatchingPosterCard(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.MoreVert,
-                    contentDescription = null,
+                    contentDescription = stringResource(Res.string.a11y_more_options),
                     tint = Color.White,
                     modifier = Modifier.size(26.dp),
                 )

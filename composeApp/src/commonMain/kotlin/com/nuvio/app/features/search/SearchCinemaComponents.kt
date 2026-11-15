@@ -58,6 +58,7 @@ import com.nuvio.app.core.ui.CinemaSectionTitle
 import com.nuvio.app.core.ui.pressScale
 import com.nuvio.app.features.home.MetaPreview
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.action_play
 import nuvio.composeapp.generated.resources.compose_search_clear
 import nuvio.composeapp.generated.resources.search_cancel
 import org.jetbrains.compose.resources.stringResource
@@ -220,7 +221,11 @@ internal fun SearchRecommendationRow(
                 .clickable(enabled = onClick != null, role = Role.Button) { onClick?.invoke() },
             contentAlignment = Alignment.Center,
         ) {
-            CinemaPlayCircle(size = 42.dp, filled = false)
+            CinemaPlayCircle(
+                size = 42.dp,
+                filled = false,
+                contentDescription = stringResource(Res.string.action_play),
+            )
         }
     }
 }

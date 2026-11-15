@@ -398,7 +398,9 @@ private fun PhoneCinemaHero(
                 ) {
                     Icon(
                         imageVector = if (heroTrailerMuted) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
-                        contentDescription = null,
+                        contentDescription = stringResource(
+                            if (heroTrailerMuted) Res.string.a11y_unmute else Res.string.a11y_mute,
+                        ),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp),
                     )
