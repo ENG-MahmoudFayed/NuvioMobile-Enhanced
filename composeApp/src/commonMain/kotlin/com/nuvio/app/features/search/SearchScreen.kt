@@ -1,6 +1,18 @@
 package com.nuvio.app.features.search
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Notifications
+import com.nuvio.app.core.ui.CinemaIconAction
+import com.nuvio.app.core.ui.CinemaTopBar
+import com.nuvio.app.features.home.components.PosterGridRow
+import com.nuvio.app.features.home.stableKey
+import nuvio.composeapp.generated.resources.home_action_downloads
+import nuvio.composeapp.generated.resources.home_action_notifications
+import nuvio.composeapp.generated.resources.search_results_title
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +106,8 @@ fun SearchScreen(
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
     searchFocusRequestCount: Int = 0,
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
+    onDownloadsClick: (() -> Unit)? = null,
+    onNotificationsClick: (() -> Unit)? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
     var isSearchFocused by remember { mutableStateOf(false) }
@@ -131,11 +145,6 @@ fun SearchScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var lastRequestedQuery by rememberSaveable { mutableStateOf<String?>(null) }
     var observedOfflineState by remember { mutableStateOf(false) }
-    val discoverInFocus by remember(query, listState) {
-        derivedStateOf {
-            query.isBlank() && listState.firstVisibleItemIndex > 0
-        }
-    }
 
     ScreenActivityEffect(scrollToTopRequests) { screenActive ->
         if (!screenActive) return@ScreenActivityEffect
@@ -237,45 +246,47 @@ fun SearchScreen(
         val homeSectionPadding = remember(maxWidth) {
             homeSectionHorizontalPaddingForWidth(maxWidth.value)
         }
-        val headerTitle = when {
-            query.isNotBlank() -> stringResource(Res.string.compose_nav_search)
-            discoverInFocus -> stringResource(Res.string.compose_search_discover_title)
-            else -> stringResource(Res.string.compose_nav_search)
-        }
+        val headerTitle = stringResource(Res.string.compose_nav_search)
 
         androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 androidx.compose.foundation.layout.Column(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    NuvioScreenHeader(
+                    androidx.compose.foundation.layout.Spacer(
+                        modifier = Modifier.height(
+                            WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
+                        ),
+                    )
+                    CinemaTopBar(
                         title = headerTitle,
+                        actions = {
+                            if (onDownloadsClick != null) {
+                                CinemaIconAction(
+                                    icon = Icons.Outlined.FileDownload,
+                                    contentDescription = stringResource(Res.string.home_action_downloads),
+                                    onClick = onDownloadsClick,
+                                )
+                            }
+                            if (onNotificationsClick != null) {
+                                CinemaIconAction(
+                                    icon = Icons.Outlined.Notifications,
+                                    contentDescription = stringResource(Res.string.home_action_notifications),
+                                    onClick = onNotificationsClick,
+                                )
+                            }
+                        },
+                    )
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(10.dp))
+                    CinemaSearchField(
+                        query = query,
+                        onQueryChange = { query = it },
+                        placeholder = stringResource(Res.string.compose_search_placeholder),
+                        focused = isSearchFocused,
+                        onFocusChange = { isSearchFocused = it },
+                        focusRequester = focusRequester,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(6.dp))
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        NuvioInputField(
-                            value = query,
-                            onValueChange = { query = it },
-                            placeholder = stringResource(Res.string.compose_search_placeholder),
-                            modifier = Modifier
-                                .focusRequester(focusRequester)
-                                .onFocusChanged { isSearchFocused = it.isFocused },
-                            trailingContent = if (query.isNotBlank()) {
-                                {
-                                    IconButton(onClick = { query = "" }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Close,
-                                            contentDescription = stringResource(Res.string.compose_search_clear),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-                            } else {
-                                null
-                            },
-                        )
-                    }
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(14.dp))
                 }
             }
@@ -390,14 +401,24 @@ fun SearchScreen(
                         }
 
                         else -> {
+                            val results = uiState.sections
+                                .flatMap { it.items }
+                                .distinctBy { it.stableKey() }
+                            item(key = "search_results_title") {
+                                SearchSectionTitle(
+                                    text = stringResource(Res.string.search_results_title),
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                )
+                            }
                             items(
-                                items = uiState.sections.withDuplicateSafeLazyKeys { section -> section.key },
-                                key = { section -> section.lazyKey },
-                            ) { keyedSection ->
-                                val section = keyedSection.value
-                                HomeCatalogRowSection(
-                                    section = section,
-                                    modifier = Modifier.padding(bottom = 12.dp),
+                                count = (results.size + discoverColumns - 1) / discoverColumns,
+                                key = { rowIndex -> "search_results_row_$rowIndex" },
+                            ) { rowIndex ->
+                                val firstIndex = rowIndex * discoverColumns
+                                PosterGridRow(
+                                    items = results.subList(firstIndex, minOf(firstIndex + discoverColumns, results.size)),
+                                    columns = discoverColumns,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
                                     watchedKeys = watchedUiState.watchedKeys,
                                     fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
                                     onPosterClick = onPosterClick,

@@ -22,7 +22,9 @@ import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.ui.NuvioDropdownChip
 import com.nuvio.app.core.ui.NuvioDropdownOption
 import com.nuvio.app.core.ui.NuvioNetworkOfflineCard
+import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
 import com.nuvio.app.features.home.MetaPreview
+import com.nuvio.app.features.home.stableKey
 import com.nuvio.app.features.home.components.PosterGridRow
 import com.nuvio.app.features.home.components.PosterGridSkeletonRow
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
@@ -43,30 +45,11 @@ internal fun LazyListScope.discoverContent(
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
 ) {
-    state.selectedCatalog?.let { selectedCatalog ->
-        item {
-            Text(
-                text = stringResource(
-                    Res.string.discover_catalog_context,
-                    selectedCatalog.addonName,
-                    selectedCatalog.type.displayTypeLabel(),
-                ),
-                modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-
     when {
         (state.isLoading || isSourceLoading) && state.items.isEmpty() -> {
-            items(2) {
-                PosterGridSkeletonRow(
-                    columns = columns,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+            items(4) {
+                SearchRecommendationSkeleton(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 )
             }
         }
@@ -84,16 +67,16 @@ internal fun LazyListScope.discoverContent(
         }
 
         else -> {
-            items(count = (state.items.size + columns - 1) / columns) { rowIndex ->
-                val firstIndex = rowIndex * columns
-                PosterGridRow(
-                    items = state.items.subList(firstIndex, minOf(firstIndex + columns, state.items.size)),
-                    columns = columns,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    watchedKeys = watchedKeys,
-                    fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
-                    onPosterClick = onPosterClick,
-                    onPosterLongClick = onPosterLongClick,
+            items(
+                items = state.items.withDuplicateSafeLazyKeys { it.stableKey() },
+                key = { keyed -> "discover:${keyed.lazyKey}" },
+            ) { keyed ->
+                val item = keyed.value
+                SearchRecommendationRow(
+                    item = item,
+                    onClick = onPosterClick?.let { { it(item) } },
+                    onLongClick = onPosterLongClick?.let { { it(item) } },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 )
             }
             if (state.isLoading) {
@@ -109,11 +92,9 @@ internal fun LazyListScope.discoverContent(
 
 @Composable
 internal fun DiscoverSectionHeader(modifier: Modifier = Modifier) {
-    Text(
-        text = stringResource(Res.string.compose_search_discover_title),
+    SearchSectionTitle(
+        text = stringResource(Res.string.search_recommended_title),
         modifier = modifier,
-        style = MaterialTheme.typography.displaySmall,
-        color = MaterialTheme.colorScheme.onBackground,
     )
 }
 

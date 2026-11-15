@@ -2970,4 +2970,7 @@
     <string name="home_top10_title">Top 10 in %1$s</string>
     <string name="home_continue_watching_for">Continue Watching for %1$s</string>
     <string name="home_badge_new_episode">New Episode</string>
+    <string name="search_recommended_title">Recommended TV Shows &amp; Movies</string>
+    <string name="search_results_title">Movies &amp; TV</string>
+    <string name="search_cancel">Cancel</string>
 </resources>

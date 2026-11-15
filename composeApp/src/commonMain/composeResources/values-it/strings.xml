@@ -2472,4 +2472,7 @@
     <string name="home_top10_title">Top 10 in %1$s</string>
     <string name="home_continue_watching_for">Continua a guardare per %1$s</string>
     <string name="home_badge_new_episode">Nuovo episodio</string>
+    <string name="search_recommended_title">Serie TV e film consigliati</string>
+    <string name="search_results_title">Film e serie TV</string>
+    <string name="search_cancel">Annulla</string>
 </resources>

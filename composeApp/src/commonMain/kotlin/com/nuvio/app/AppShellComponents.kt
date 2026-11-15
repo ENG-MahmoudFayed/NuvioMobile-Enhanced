@@ -236,6 +236,8 @@ internal fun AppTabHost(
                     onPosterLongClick = actions.onPosterLongClick,
                     searchFocusRequestCount = state.searchFocusRequestCount,
                     scrollToTopRequests = requests.searchScrollToTopRequests,
+                    onDownloadsClick = actions.onDownloadsClick,
+                    onNotificationsClick = actions.onWhatsNewSettingsClick,
                 )
             }
 
