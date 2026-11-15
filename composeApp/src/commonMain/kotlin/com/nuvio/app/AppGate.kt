@@ -38,7 +38,10 @@ import com.nuvio.app.core.ui.NativeTabBridge
 import com.nuvio.app.core.ui.NuvioTokens
 import com.nuvio.app.core.ui.PlatformBackHandler
 import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.core.onboarding.OnboardingFlags
+import com.nuvio.app.core.onboarding.OnboardingStorage
 import com.nuvio.app.features.auth.AuthScreen
+import com.nuvio.app.features.onboarding.ProfilesIntroScreen
 import com.nuvio.app.features.membership.MemberAccessRepository
 import com.nuvio.app.features.profiles.AvatarRepository
 import com.nuvio.app.features.profiles.ProfileBiometricAuth
@@ -55,6 +58,7 @@ import kotlinx.coroutines.launch
 private enum class AppGateScreen {
     Loading,
     Auth,
+    ProfilesIntro,
     ProfileSelection,
     ProfileEdit,
     Main,
@@ -268,6 +272,7 @@ internal fun AppGate(
             }
             AppGateScreen.Loading.name,
             AppGateScreen.Auth.name,
+            AppGateScreen.ProfilesIntro.name,
             -> {
                 mainContentStarted = false
                 appGateController?.reportMainContentReady(false)
@@ -472,7 +477,10 @@ internal fun AppGate(
             is AuthState.Authenticated -> {
                 val authenticatedState = authState as AuthState.Authenticated
                 ProfileRepository.ensureLoaded(authenticatedState.userId)
-                if (gateScreen == AppGateScreen.Loading.name || gateScreen == AppGateScreen.Auth.name) {
+                val justSignedIn = gateScreen == AppGateScreen.Auth.name
+                if (justSignedIn && !OnboardingStorage.isDone(OnboardingFlags.ProfilesIntroSeen)) {
+                    gateScreen = AppGateScreen.ProfilesIntro.name
+                } else if (justSignedIn || gateScreen == AppGateScreen.Loading.name) {
                     enterProfileGate(ProfileRepository.state.value.profiles, syncOnEnter = true)
                 }
             }
@@ -575,6 +583,17 @@ internal fun AppGate(
                             .fillMaxSize()
                             .background(MaterialTheme.nuvio.colors.background)
                             .padding(LocalVerticalBarPadding.current),
+                    )
+                }
+                AppGateScreen.ProfilesIntro.name -> {
+                    ProfilesIntroScreen(
+                        onFinished = {
+                            OnboardingStorage.markDone(OnboardingFlags.ProfilesIntroSeen)
+                            gateScope.launch {
+                                enterProfileGate(ProfileRepository.state.value.profiles, syncOnEnter = true)
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
                 AppGateScreen.ProfileSelection.name -> {

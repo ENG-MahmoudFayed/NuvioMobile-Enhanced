@@ -2452,4 +2452,10 @@
     <string name="auth_sign_up_now">Registrati ora</string>
     <string name="auth_have_account">Hai già un account?</string>
     <string name="auth_sign_in_now">Accedi</string>
+    <string name="profiles_intro_label">COME FUNZIONANO I PROFILI</string>
+    <string name="profiles_intro_progress">I profili ricordano cosa guardi e dove ti sei fermato</string>
+    <string name="profiles_intro_own_space">Ogni profilo ha la sua My List, il suo tema e le sue impostazioni</string>
+    <string name="profiles_intro_household">Aggiungi fino a 6 profili per chi guarda con te</string>
+    <string name="profiles_intro_next">Avanti</string>
+    <string name="profiles_intro_got_it">Ho capito</string>
 </resources>

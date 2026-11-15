@@ -2950,4 +2950,10 @@
     <string name="auth_sign_up_now">Sign up now</string>
     <string name="auth_have_account">Already have an account?</string>
     <string name="auth_sign_in_now">Sign in</string>
+    <string name="profiles_intro_label">HOW PROFILES WORK</string>
+    <string name="profiles_intro_progress">Profiles keep track of what you watch and where you left off</string>
+    <string name="profiles_intro_own_space">Each profile keeps its own My List, theme and settings</string>
+    <string name="profiles_intro_household">Add up to 6 profiles for everyone who watches with you</string>
+    <string name="profiles_intro_next">Next</string>
+    <string name="profiles_intro_got_it">Got It</string>
 </resources>
