@@ -2984,4 +2984,8 @@
     <string name="a11y_more_options">More options</string>
     <string name="a11y_mute">Mute</string>
     <string name="a11y_unmute">Unmute</string>
+    <string name="search_recommended_movies">Recommended Movies</string>
+    <string name="search_recommended_shows">Recommended TV Shows</string>
+    <string name="search_no_results_for">No results for \"%1$s\"</string>
+    <string name="search_no_results_hint">Check the spelling or try another title, actor or genre.</string>
 </resources>

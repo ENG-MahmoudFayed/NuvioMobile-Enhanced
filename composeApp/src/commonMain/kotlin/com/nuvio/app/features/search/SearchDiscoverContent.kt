@@ -1,5 +1,6 @@
 package com.nuvio.app.features.search
 
+import com.nuvio.app.core.ui.CinemaSpace
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,7 @@ internal fun LazyListScope.discoverContent(
     fullyWatchedSeriesKeys: Set<String> = emptySet(),
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
+    onPlayClick: ((MetaPreview) -> Unit)? = null,
 ) {
     when {
         (state.isLoading || isSourceLoading) && state.items.isEmpty() -> {
@@ -77,6 +79,7 @@ internal fun LazyListScope.discoverContent(
                     item = item,
                     onClick = onPosterClick?.let { { it(item) } },
                     onLongClick = onPosterLongClick?.let { { it(item) } },
+                    onPlayClick = (onPlayClick ?: onPosterClick)?.let { { it(item) } },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 )
             }
@@ -92,9 +95,17 @@ internal fun LazyListScope.discoverContent(
 }
 
 @Composable
-internal fun DiscoverSectionHeader(modifier: Modifier = Modifier) {
+internal fun DiscoverSectionHeader(
+    selectedType: String?,
+    modifier: Modifier = Modifier,
+) {
+    val title = when (selectedType?.trim()?.lowercase()) {
+        "movie" -> Res.string.search_recommended_movies
+        "series", "tv", "show", "anime" -> Res.string.search_recommended_shows
+        else -> Res.string.search_recommended_title
+    }
     SearchSectionTitle(
-        text = stringResource(Res.string.search_recommended_title),
+        text = stringResource(title),
         modifier = modifier,
     )
 }
@@ -107,9 +118,12 @@ internal fun DiscoverFilterRow(
     onGenreSelected: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The page margin lives inside the scroll so the last chip is never cut at the edge.
     Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = CinemaSpace.PageMargin),
+        horizontalArrangement = Arrangement.spacedBy(CinemaSpace.s8),
     ) {
         NuvioDropdownChip(
             title = stringResource(Res.string.discover_select_type),

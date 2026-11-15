@@ -238,6 +238,7 @@ internal fun AppTabHost(
                     scrollToTopRequests = requests.searchScrollToTopRequests,
                     onDownloadsClick = actions.onDownloadsClick,
                     onNotificationsClick = actions.onWhatsNewSettingsClick,
+                    onPlayClick = actions.onHeroPlayClick,
                 )
             }
 

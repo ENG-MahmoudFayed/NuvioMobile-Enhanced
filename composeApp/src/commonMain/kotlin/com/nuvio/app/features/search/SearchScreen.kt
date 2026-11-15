@@ -1,5 +1,8 @@
 package com.nuvio.app.features.search
 
+import androidx.compose.ui.platform.LocalFocusManager
+import nuvio.composeapp.generated.resources.search_no_results_for
+import nuvio.composeapp.generated.resources.search_no_results_hint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -108,6 +111,7 @@ fun SearchScreen(
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
     onDownloadsClick: (() -> Unit)? = null,
     onNotificationsClick: (() -> Unit)? = null,
+    onPlayClick: ((MetaPreview) -> Unit)? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
     var isSearchFocused by remember { mutableStateOf(false) }
@@ -146,6 +150,13 @@ fun SearchScreen(
     var lastRequestedQuery by rememberSaveable { mutableStateOf<String?>(null) }
     var observedOfflineState by remember { mutableStateOf(false) }
 
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }
+            .filter { it }
+            .collect { focusManager.clearFocus() }
+    }
+
     ScreenActivityEffect(scrollToTopRequests) { screenActive ->
         if (!screenActive) return@ScreenActivityEffect
         scrollToTopRequests.collect {
@@ -170,7 +181,7 @@ fun SearchScreen(
             lastRequestedQuery = null
             SearchRepository.clear()
         } else {
-            delay(350)
+            delay(300)
             lastRequestedQuery = normalizedQuery
             SearchRepository.search(
                 query = normalizedQuery,
@@ -299,7 +310,10 @@ fun SearchScreen(
             ) {
                 if (query.isBlank()) {
                     item {
-                        DiscoverSectionHeader(modifier = Modifier.padding(horizontal = 16.dp))
+                        DiscoverSectionHeader(
+                            selectedType = discoverUiState.selectedType,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
                     }
                     stickyHeader {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -311,9 +325,7 @@ fun SearchScreen(
                             )
                             DiscoverFilterRow(
                                 state = discoverUiState,
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 8.dp, bottom = 14.dp),
+                                modifier = Modifier.padding(top = 8.dp, bottom = 14.dp),
                                 onTypeSelected = SearchRepository::selectDiscoverType,
                                 onCatalogSelected = SearchRepository::selectDiscoverCatalog,
                                 onGenreSelected = SearchRepository::selectDiscoverGenre,
@@ -354,6 +366,7 @@ fun SearchScreen(
                         fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
                         onPosterClick = onPosterClick,
                         onPosterLongClick = onPosterLongClick,
+                        onPlayClick = onPlayClick,
                     )
                 } else {
                     val normalizedQuery = query.trim()
@@ -379,6 +392,7 @@ fun SearchScreen(
                             item {
                                 SearchEmptyStateCard(
                                     reason = uiState.emptyStateReason,
+                                    query = normalizedQuery,
                                     errorMessage = uiState.errorMessage,
                                     networkCondition = networkStatusUiState.condition,
                                     onRetry = {
@@ -443,6 +457,7 @@ fun SearchScreen(
 @Composable
 private fun SearchEmptyStateCard(
     reason: SearchEmptyStateReason?,
+    query: String,
     errorMessage: String?,
     networkCondition: NetworkCondition,
     onRetry: (() -> Unit)? = null,
@@ -480,8 +495,8 @@ private fun SearchEmptyStateCard(
         }
 
         SearchEmptyStateReason.NoResults, null -> {
-            title = stringResource(Res.string.compose_search_empty_no_results_title)
-            message = stringResource(Res.string.compose_search_empty_no_results_message)
+            title = stringResource(Res.string.search_no_results_for, query)
+            message = stringResource(Res.string.search_no_results_hint)
         }
     }
 

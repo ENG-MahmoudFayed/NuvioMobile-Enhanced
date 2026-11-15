@@ -2486,4 +2486,8 @@
     <string name="a11y_more_options">Altre opzioni</string>
     <string name="a11y_mute">Disattiva audio</string>
     <string name="a11y_unmute">Attiva audio</string>
+    <string name="search_recommended_movies">Film consigliati</string>
+    <string name="search_recommended_shows">Serie TV consigliate</string>
+    <string name="search_no_results_for">Nessun risultato per \"%1$s\"</string>
+    <string name="search_no_results_hint">Controlla l'ortografia o prova un altro titolo, attore o genere.</string>
 </resources>

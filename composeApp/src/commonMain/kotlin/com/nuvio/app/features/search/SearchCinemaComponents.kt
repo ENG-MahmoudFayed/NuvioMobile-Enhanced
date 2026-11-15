@@ -1,5 +1,6 @@
 package com.nuvio.app.features.search
 
+import com.nuvio.app.core.ui.CinemaSize
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -177,6 +178,7 @@ internal fun SearchRecommendationRow(
     onClick: (() -> Unit)?,
     onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    onPlayClick: (() -> Unit)? = onClick,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val artwork = item.landscapePoster ?: item.banner ?: item.poster
@@ -216,9 +218,9 @@ internal fun SearchRecommendationRow(
         )
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(CinemaSize.MinTouchTarget + 4.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .clickable(enabled = onClick != null, role = Role.Button) { onClick?.invoke() },
+                .clickable(enabled = onPlayClick != null, role = Role.Button) { onPlayClick?.invoke() },
             contentAlignment = Alignment.Center,
         ) {
             CinemaPlayCircle(
