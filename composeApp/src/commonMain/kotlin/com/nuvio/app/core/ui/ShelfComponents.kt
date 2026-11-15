@@ -143,7 +143,9 @@ fun NuvioPosterCard(
 ) {
     val posterCardStyle = rememberPosterCardStyleUiState()
     val tokens = MaterialTheme.nuvio
-    val cardWidth = shape.cardWidth(basePosterWidthDp = posterCardStyle.widthDp)
+    val cardWidth = shape.cardWidth(
+        basePosterWidthDp = LocalShelfPosterWidthDp.current ?: posterCardStyle.widthDp,
+    )
     val cardShape = RoundedCornerShape(posterCardStyle.cornerRadiusDp.dp)
     val catalogLogoOverlaySize = catalogLogoOverlaySize(
         basePosterWidthDp = posterCardStyle.widthDp,
@@ -390,3 +392,19 @@ private fun NuvioPosterShape.cardWidth(basePosterWidthDp: Int): Dp =
         NuvioPosterShape.Square -> basePosterWidthDp.dp
         NuvioPosterShape.Landscape -> landscapePosterWidth(basePosterWidthDp)
     }
+
+/**
+ * Poster width a screen hands its rows so the last visible poster peeks in halfway. Null keeps
+ * the width from the poster style setting.
+ */
+internal val LocalShelfPosterWidthDp = androidx.compose.runtime.compositionLocalOf<Int?> { null }
+
+/**
+ * The poster width that shows a whole number of posters plus half of the next one across
+ * [availableWidthDp], with [gapDp] between them, staying close to [preferredWidthDp].
+ */
+internal fun halfPeekPosterWidthDp(availableWidthDp: Float, preferredWidthDp: Int, gapDp: Int): Int {
+    val pitch = preferredWidthDp + gapDp
+    val whole = ((availableWidthDp + gapDp) / pitch).toInt().coerceAtLeast(2)
+    return ((availableWidthDp - whole * gapDp) / (whole + 0.5f)).toInt()
+}
