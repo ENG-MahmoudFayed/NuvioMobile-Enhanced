@@ -1,5 +1,6 @@
 package com.nuvio.app.features.details.components
 
+import com.nuvio.app.core.ui.CinemaType
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
@@ -262,14 +263,12 @@ internal fun EpisodeNavigatorBar(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(Res.string.episode_navigator_count, shownCount, totalCount),
-                style = MaterialTheme.typography.labelMedium,
-                color = tokens.colors.textMuted,
+                style = CinemaType.caption,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 text = stringResource(state.sort.labelRes()),
-                style = MaterialTheme.typography.labelMedium,
-                color = tokens.colors.textMuted,
+                style = CinemaType.caption,
             )
         }
     }

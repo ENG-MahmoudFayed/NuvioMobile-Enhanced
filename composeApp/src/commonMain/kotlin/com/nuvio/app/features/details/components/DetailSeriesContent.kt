@@ -1,5 +1,6 @@
 package com.nuvio.app.features.details.components
 
+import com.nuvio.app.core.ui.CinemaType
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -1043,25 +1044,23 @@ private fun EpisodeHorizontalCard(
 
             Text(
                 text = video.title,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = CinemaType.cardTitle.copy(
                     fontSize = metrics.titleTextSize,
-                    fontWeight = FontWeight.ExtraBold,
                     lineHeight = metrics.titleLineHeight,
                 ),
-                color = Color.White,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
 
             if (!video.overview.isNullOrBlank()) {
                 Text(
                     text = video.overview,
-                    style = MaterialTheme.typography.bodySmall.copy(
+                    style = CinemaType.body.copy(
                         fontSize = metrics.bodyTextSize,
                         lineHeight = metrics.bodyLineHeight,
+                        color = Color.White.copy(alpha = 0.86f),
                     ),
-                    color = Color.White.copy(alpha = 0.86f),
-                    maxLines = metrics.overviewMaxLines,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -1075,8 +1074,10 @@ private fun EpisodeHorizontalCard(
                     runtimeLabel?.let { runtime ->
                         Text(
                             text = runtime,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = metrics.metaTextSize),
-                            color = Color.White.copy(alpha = 0.78f),
+                            style = CinemaType.caption.copy(
+                                fontSize = metrics.metaTextSize,
+                                color = Color.White.copy(alpha = 0.78f),
+                            ),
                             maxLines = 1,
                         )
                     }
@@ -1091,8 +1092,10 @@ private fun EpisodeHorizontalCard(
                     formattedDate?.let { date ->
                         Text(
                             text = date,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = metrics.metaTextSize),
-                            color = Color.White.copy(alpha = 0.78f),
+                            style = CinemaType.caption.copy(
+                                fontSize = metrics.metaTextSize,
+                                color = Color.White.copy(alpha = 0.78f),
+                            ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.End,
