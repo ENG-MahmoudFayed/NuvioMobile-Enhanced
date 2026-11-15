@@ -2988,4 +2988,6 @@
     <string name="search_recommended_shows">Recommended TV Shows</string>
     <string name="search_no_results_for">No results for \"%1$s\"</string>
     <string name="search_no_results_hint">Check the spelling or try another title, actor or genre.</string>
+    <string name="details_external_player">External Player</string>
+    <string name="details_present">Present</string>
 </resources>

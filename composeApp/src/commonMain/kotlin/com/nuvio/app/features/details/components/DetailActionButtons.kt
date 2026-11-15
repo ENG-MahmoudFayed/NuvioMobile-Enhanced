@@ -1,5 +1,18 @@
 package com.nuvio.app.features.details.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.rounded.CheckCircle
+import com.nuvio.app.core.ui.CinemaMotion
+import com.nuvio.app.core.ui.CinemaSize
+import com.nuvio.app.core.ui.CinemaSpace
+import com.nuvio.app.core.ui.CinemaType
+import nuvio.composeapp.generated.resources.details_external_player
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.ThumbUp
@@ -123,7 +136,7 @@ fun DetailActionButtons(
     onShareClick: (() -> Unit)? = null,
 ) {
     val playPainter = appIconPainter(AppIconResource.PlayerPlay)
-    val buttonHeight = if (isTablet) 56.dp else 52.dp
+    val buttonHeight = CinemaSize.ButtonHeight
     val iconButtonSize = buttonHeight
     val playShape = RoundedCornerShape(40.dp)
     val hapticFeedback = LocalHapticFeedback.current
@@ -139,7 +152,7 @@ fun DetailActionButtons(
         modifier = modifier
             .widthIn(max = if (isTablet) 520.dp else 420.dp)
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(CinemaSpace.s8),
     ) {
         if (iconActionRow) {
             PlayButton(
@@ -439,7 +452,7 @@ private fun detailActionSet(
     }
     val watchedAction = DetailSecondaryAction(
         label = stringResource(if (isWatched) Res.string.hero_mark_unwatched else Res.string.hero_mark_watched),
-        icon = if (isWatched) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+        icon = if (isWatched) Icons.Rounded.CheckCircle else Icons.Outlined.CheckCircle,
         isActive = isWatched,
         onClick = onWatchedClick,
     )
@@ -452,7 +465,7 @@ private fun detailActionSet(
     )
     val downloadLabel = stringResource(Res.string.details_download_action)
     val playFromStartLabel = stringResource(Res.string.details_action_start_from_beginning)
-    val externalLabel = stringResource(Res.string.streams_open_external_player)
+    val externalLabel = stringResource(Res.string.details_external_player)
     val iconActions = buildList {
         onDownloadClick?.let { download ->
             add(DetailSecondaryAction(label = downloadLabel, icon = Icons.Rounded.Download, onClick = download))
@@ -831,67 +844,94 @@ private fun DownloadPillButton(
     }
 }
 
-/** Plain white icons with a bold caption underneath, spread evenly across the width. */
+/**
+ * Plain white icons with a caption underneath, in rows of four equal columns so captions line up
+ * from one row to the next.
+ */
 @Composable
 private fun DetailLabelledActionRow(
     actions: List<DetailSecondaryAction>,
     modifier: Modifier = Modifier,
 ) {
-    val fits = actions.size <= 5
-    Row(
-        modifier = modifier.then(if (fits) Modifier else Modifier.horizontalScroll(rememberScrollState())),
-        horizontalArrangement = if (fits) Arrangement.SpaceEvenly else Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.Top,
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(CinemaSpace.s8),
     ) {
-        actions.forEach { action ->
-            DetailLabelledAction(action = action)
+        actions.chunked(DetailActionColumns).forEach { rowActions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+            ) {
+                rowActions.forEach { action ->
+                    DetailLabelledAction(action = action, modifier = Modifier.weight(1f))
+                }
+                repeat(DetailActionColumns - rowActions.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
+private const val DetailActionColumns = 4
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DetailLabelledAction(action: DetailSecondaryAction) {
+private fun DetailLabelledAction(
+    action: DetailSecondaryAction,
+    modifier: Modifier = Modifier,
+) {
     val interactionSource = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
     Column(
-        modifier = Modifier
-            .width(78.dp)
+        modifier = modifier
+            .heightIn(min = CinemaSize.MinTouchTarget)
             .pressScale(interactionSource)
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 role = Role.Button,
-                onClick = action.onClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    action.onClick()
+                },
                 onLongClick = action.onLongClick,
             )
-            .padding(vertical = 6.dp),
+            .padding(vertical = 6.dp, horizontal = CinemaSpace.s4),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (action.drawable != null) {
-            Icon(
-                painter = painterResource(action.drawable),
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(30.dp),
-            )
-        } else {
-            Icon(
-                imageVector = action.icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(30.dp),
-            )
+        AnimatedContent(
+            targetState = action.drawable to action.icon,
+            transitionSpec = {
+                (fadeIn(CinemaMotion.micro()) + scaleIn(CinemaMotion.spring(), initialScale = 0.6f))
+                    .togetherWith(fadeOut(CinemaMotion.micro()))
+            },
+            label = "detail_action_icon",
+        ) { (drawable, icon) ->
+            if (drawable != null) {
+                Icon(
+                    painter = painterResource(drawable),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(CinemaSize.Icon),
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(CinemaSize.Icon),
+                )
+            }
         }
         Text(
             text = action.label,
-            color = Color.White,
-            fontSize = 13.sp,
-            lineHeight = 16.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = CinemaType.caption.copy(color = Color.White),
             textAlign = TextAlign.Center,
             maxLines = 2,
+            minLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
