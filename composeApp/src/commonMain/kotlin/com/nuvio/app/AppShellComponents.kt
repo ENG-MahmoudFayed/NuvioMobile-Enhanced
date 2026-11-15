@@ -185,6 +185,7 @@ internal data class AppTabActions(
     val onSupportersContributorsSettingsClick: () -> Unit = {},
     val onLicensesAttributionsSettingsClick: () -> Unit = {},
     val onWhatsNewSettingsClick: () -> Unit = {},
+    val onNotificationsClick: () -> Unit = {},
     val onCheckForUpdatesClick: (() -> Unit)? = null,
     val onTestUpdateBannerClick: (() -> Unit)? = null,
     val onCollectionsSettingsClick: () -> Unit = {},
@@ -226,7 +227,7 @@ internal fun AppTabHost(
                         onFolderClick = actions.onFolderClick,
                         onFirstCatalogRendered = actions.onInitialHomeContentRendered,
                         onDownloadsClick = actions.onDownloadsClick,
-                        onNotificationsClick = actions.onWhatsNewSettingsClick,
+                        onNotificationsClick = actions.onNotificationsClick,
                     )
                 }
             }
@@ -240,7 +241,7 @@ internal fun AppTabHost(
                     searchFocusRequestCount = state.searchFocusRequestCount,
                     scrollToTopRequests = requests.searchScrollToTopRequests,
                     onDownloadsClick = actions.onDownloadsClick,
-                    onNotificationsClick = actions.onWhatsNewSettingsClick,
+                    onNotificationsClick = actions.onNotificationsClick,
                     onPlayClick = actions.onHeroPlayClick,
                 )
             }
@@ -338,7 +339,7 @@ private fun MyFlowixTab(
                 onOpenAccount = actions.onAccountSettingsClick,
                 onOpenLibrary = { paneName = MyFlowixPane.Library.name },
                 onDownloadsClick = actions.onDownloadsClick,
-                onNotificationsClick = actions.onWhatsNewSettingsClick,
+                onNotificationsClick = actions.onNotificationsClick,
                 onSwitchProfile = actions.onSwitchProfile,
                 onSelectProfile = actions.onSelectProfile,
                 onEditProfile = actions.onEditProfile,

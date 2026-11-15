@@ -2964,7 +2964,7 @@
     <string name="home_filter_all_categories">All Categories</string>
     <string name="home_filter_clear">Clear filter</string>
     <string name="home_action_downloads">Downloads</string>
-    <string name="home_action_notifications">What's new</string>
+    <string name="home_action_notifications">Notifications</string>
     <string name="home_hero_type_show">Show</string>
     <string name="home_hero_type_movie">Movie</string>
     <string name="home_top10_title">Top 10 in %1$s</string>
@@ -2990,4 +2990,9 @@
     <string name="search_no_results_hint">Check the spelling or try another title, actor or genre.</string>
     <string name="details_external_player">External Player</string>
     <string name="details_present">Present</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty_title">No notifications yet</string>
+    <string name="notifications_empty_message">New episodes from your list and Flowix news will show up here.</string>
+    <string name="notifications_whats_new">What's New in Flowix</string>
+    <string name="notifications_whats_new_subtitle">See what changed in the latest updates</string>
 </resources>

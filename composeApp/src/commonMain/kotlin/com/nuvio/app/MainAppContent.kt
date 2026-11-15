@@ -1,5 +1,7 @@
 package com.nuvio.app
 
+import com.nuvio.app.navigation.NotificationsRoute
+import com.nuvio.app.features.notifications.NotificationsScreen
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.MutableTransitionState
@@ -398,6 +400,7 @@ internal fun MainAppContent(
     val supportersSettingsTitle = stringResource(Res.string.compose_settings_page_supporters_contributors)
     val licensesSettingsTitle = stringResource(Res.string.compose_settings_page_licenses_attributions)
     val whatsNewSettingsTitle = stringResource(Res.string.compose_settings_page_whats_new)
+    val notificationsTitle = stringResource(Res.string.notifications_title)
     val collectionsTitle = stringResource(Res.string.collections_header)
     val newCollectionTitle = stringResource(Res.string.collections_new)
     val detailsFallbackTitle = stringResource(Res.string.meta_section_details_title)
@@ -1752,6 +1755,7 @@ internal fun MainAppContent(
                                     }
                                 },
                                 onDownloadsClick = { navController.navigate(DownloadsRoute(downloadsTitle)) },
+                                onNotificationsClick = { navController.navigate(NotificationsRoute(notificationsTitle)) },
                                 onContinueWatchingClick = onContinueWatchingClick,
                                 onContinueWatchingLongPress = onContinueWatchingLongPress,
                                 onLiveTvChannelClick = onLiveTvChannelClick,
@@ -1961,6 +1965,13 @@ internal fun MainAppContent(
                             onSaved = onBack,
                         )
                     }
+                }
+                entry<NotificationsRoute> { route ->
+                    val onBack = rememberGuardedPopBackStack(navController, route)
+                    NotificationsScreen(
+                        onBack = onBack,
+                        onOpenWhatsNew = { navController.navigate(WhatsNewSettingsRoute(whatsNewSettingsTitle)) },
+                    )
                 }
                 entry<DownloadsRoute> { route ->
                     DownloadsDestination(

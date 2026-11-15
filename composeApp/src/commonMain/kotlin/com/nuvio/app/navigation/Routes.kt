@@ -88,6 +88,9 @@ data class PartyRoute(
 ) : SettingsDestinationRoute
 
 @Serializable
+data class NotificationsRoute(override val title: String = "") : AppRoute
+
+@Serializable
 data class DownloadsRoute(override val title: String = "") : AppRoute {
     override val preferredTabName: String
         get() = "Library"

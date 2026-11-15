@@ -2466,7 +2466,7 @@
     <string name="home_filter_all_categories">Tutte le categorie</string>
     <string name="home_filter_clear">Rimuovi filtro</string>
     <string name="home_action_downloads">Download</string>
-    <string name="home_action_notifications">Novità</string>
+    <string name="home_action_notifications">Notifiche</string>
     <string name="home_hero_type_show">Serie</string>
     <string name="home_hero_type_movie">Film</string>
     <string name="home_top10_title">Top 10 in %1$s</string>
@@ -2492,4 +2492,9 @@
     <string name="search_no_results_hint">Controlla l'ortografia o prova un altro titolo, attore o genere.</string>
     <string name="details_external_player">Player esterno</string>
     <string name="details_present">In corso</string>
+    <string name="notifications_title">Notifiche</string>
+    <string name="notifications_empty_title">Ancora nessuna notifica</string>
+    <string name="notifications_empty_message">I nuovi episodi della tua lista e le novità di Flowix compariranno qui.</string>
+    <string name="notifications_whats_new">Novità di Flowix</string>
+    <string name="notifications_whats_new_subtitle">Scopri cosa è cambiato negli ultimi aggiornamenti</string>
 </resources>

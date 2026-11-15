@@ -1,5 +1,6 @@
 package com.nuvio.app
 
+import com.nuvio.app.navigation.NotificationsRoute
 import androidx.navigation3.runtime.NavKey
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.nuvio.app.features.catalog.CatalogRepository
@@ -34,6 +35,7 @@ internal val navigationSavedStateConfiguration = SavedStateConfiguration {
             subclass(MetaScreenSettingsRoute::class, MetaScreenSettingsRoute.serializer())
             subclass(ContinueWatchingSettingsRoute::class, ContinueWatchingSettingsRoute.serializer())
             subclass(DownloadsRoute::class, DownloadsRoute.serializer())
+            subclass(NotificationsRoute::class, NotificationsRoute.serializer())
             subclass(PartyRoute::class, PartyRoute.serializer())
             subclass(DownloadShowRoute::class, DownloadShowRoute.serializer())
             subclass(AddonsSettingsRoute::class, AddonsSettingsRoute.serializer())
