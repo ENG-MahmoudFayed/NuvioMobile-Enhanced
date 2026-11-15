@@ -57,10 +57,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.nuvio.app.core.ui.CinemaAsyncImage
 import com.nuvio.app.core.ui.CinemaBlockButton
 import com.nuvio.app.core.ui.CinemaColors
 import com.nuvio.app.core.ui.CinemaPagerDots
 import com.nuvio.app.core.ui.pressScale
+import com.nuvio.app.core.ui.rememberReduceMotion
 import com.nuvio.app.features.settings.AppBrandWordmark
 import com.nuvio.app.features.tmdb.TmdbTrendingArt
 import com.nuvio.app.features.tmdb.TmdbTrendingArtwork
@@ -329,9 +331,10 @@ internal fun PosterMosaic(
     posters: List<TmdbTrendingArt>,
     modifier: Modifier = Modifier,
 ) {
+    val reduceMotion = rememberReduceMotion()
     val drift by rememberInfiniteTransition(label = "poster_mosaic").animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = if (reduceMotion) 0f else 1f,
         animationSpec = infiniteRepeatable(tween(14_000, easing = LinearEasing), RepeatMode.Reverse),
         label = "poster_mosaic_drift",
     )
@@ -364,10 +367,10 @@ internal fun PosterMosaic(
                             .background(if ((row + column) % 2 == 0) Color(0xFF241E22) else Color(0xFF1C1719)),
                     ) {
                         if (art != null) {
-                            AsyncImage(
+                            CinemaAsyncImage(
                                 model = art.posterUrl,
                                 contentDescription = null,
-                                contentScale = ContentScale.Crop,
+                                placeholderColor = Color.Transparent,
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }

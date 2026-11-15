@@ -12,6 +12,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import coil3.compose.AsyncImage
 import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.features.auth.PosterMosaic
 import com.nuvio.app.core.ui.CinemaProfileAvatarShape
 import com.nuvio.app.features.tmdb.TmdbTrendingArt
 import com.nuvio.app.features.tmdb.TmdbTrendingArtwork
@@ -195,8 +196,8 @@ fun ProfileSelectionScreen(
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navigationBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val backgroundProfile = profileState.activeProfile ?: profileState.profiles.firstOrNull()
-    var heroArt by remember { mutableStateOf<TmdbTrendingArt?>(null) }
-    LaunchedEffect(Unit) { heroArt = TmdbTrendingArtwork.load().firstOrNull() }
+    var heroPosters by remember { mutableStateOf<List<TmdbTrendingArt>>(emptyList()) }
+    LaunchedEffect(Unit) { heroPosters = TmdbTrendingArtwork.load() }
     // Where the first row of avatars is centred: the grey sheet's curved edge runs through it.
     var sheetTopPx by remember { mutableStateOf<Float?>(null) }
     var containerTopPx by remember { mutableStateOf(0f) }
@@ -219,15 +220,12 @@ fun ProfileSelectionScreen(
                 profile = backgroundProfile,
                 modifier = Modifier.fillMaxSize(),
                 fallback = {
-                    heroArt?.let { art ->
-                        AsyncImage(
-                            model = if (isTabletLayout) art.backdropUrl ?: art.posterUrl else art.posterUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
+                    if (heroPosters.isNotEmpty()) {
+                        PosterMosaic(
+                            posters = heroPosters,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = if (isTabletLayout) 0.dp else 28.dp)
-                                .padding(top = statusBarTop + 40.dp),
+                                .graphicsLayer { alpha = 0.7f },
                         )
                     }
                 },
@@ -250,11 +248,34 @@ fun ProfileSelectionScreen(
                         Brush.verticalGradient(
                             0f to Color.Black.copy(alpha = 0.55f),
                             0.18f to Color.Transparent,
-                            0.7f to Color.Transparent,
+                            0.6f to Color.Black.copy(alpha = 0.25f),
                             1f to Color.Black,
                         ),
                     ),
             )
+            // Over the poster wall the wordmark sits in the middle; with no posters to show it
+            // grows to fill the empty half on its own.
+            val wordmarkHeight = when {
+                heroPosters.isEmpty() -> if (isTabletLayout) 72.dp else 60.dp
+                isTabletLayout -> 48.dp
+                else -> 40.dp
+            }
+            // Not wrapped in `contentFadeAlpha` like the rest of this screen below: the
+            // wordmark and the Supporter badge next to it both stay fully visible through the
+            // tap-to-centre transition, while everything underneath fades away.
+            Row(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(top = statusBarTop)
+                    .graphicsLayer {
+                        alpha = titleAlpha.value
+                        translationY = titleOffset.value
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppBrandWordmark(modifier = Modifier.height(wordmarkHeight))
+                SupporterBadgeIfPresent(height = wordmarkHeight)
+            }
         }
 
         sheetTopPx?.let { top ->
@@ -291,28 +312,7 @@ fun ProfileSelectionScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(statusBarTop + 14.dp))
-            // Not wrapped in `contentFadeAlpha` like the rest of this screen below: the
-            // wordmark and the Supporter badge next to it both stay fully visible through the
-            // tap-to-centre transition, while everything underneath fades away.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AppBrandWordmark(
-                    modifier = Modifier
-                        .height(if (isTabletLayout) 34.dp else 28.dp)
-                        .graphicsLayer {
-                            alpha = titleAlpha.value
-                            translationY = titleOffset.value
-                        },
-                )
-                SupporterBadgeIfPresent(
-                    height = if (isTabletLayout) 34.dp else 28.dp,
-                    modifier = Modifier.graphicsLayer {
-                        alpha = titleAlpha.value
-                        translationY = titleOffset.value
-                    },
-                )
-            }
-            Spacer(Modifier.height((heroHeight - statusBarTop - 96.dp).coerceAtLeast(120.dp)))
+            Spacer(Modifier.height((heroHeight - 54.dp).coerceAtLeast(160.dp)))
 
             Column(
                 modifier = Modifier
