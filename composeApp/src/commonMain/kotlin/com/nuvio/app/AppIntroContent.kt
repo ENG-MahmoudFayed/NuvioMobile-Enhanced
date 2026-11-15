@@ -6,42 +6,49 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.rememberReduceMotion
 import com.nuvio.app.features.settings.AppBrandMark
-import com.nuvio.app.features.settings.AppBrandWordmark
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-internal const val AppIntroMinDurationMs = 1300L
+/** How long the intro holds the screen at most; data keeps loading underneath meanwhile. */
+internal const val AppIntroMinDurationMs = 1100L
+
+/** Same size as the iOS launch screen logo, so the hand-over shows no jump. */
+private val IntroMarkSize = 80.dp
 
 /**
- * The opening frames on pure black: the Flowix mark appears on its own, then gives way to the
- * full wordmark, the way a studio card opens a film.
+ * The first frame matches the static launch screen: the Flowix mark alone in the middle of black.
+ * It then grows a little while a red glow blooms behind it, and fades out toward the profile
+ * picker. Under Reduce Motion the mark simply fades.
  */
 @Composable
 internal fun AppIntroContent(modifier: Modifier = Modifier) {
-    val markAlpha = remember { Animatable(0f) }
-    val markScale = remember { Animatable(0.82f) }
-    val wordmarkAlpha = remember { Animatable(0f) }
-    val wordmarkScale = remember { Animatable(0.92f) }
+    val reduceMotion = rememberReduceMotion()
+    val markScale = remember { Animatable(1f) }
+    val glowAlpha = remember { Animatable(0f) }
+    val contentAlpha = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        launch { markAlpha.animateTo(1f, tween(durationMillis = 260, easing = FastOutSlowInEasing)) }
-        markScale.animateTo(1f, tween(durationMillis = 420, easing = FastOutSlowInEasing))
-        delay(180)
-        launch { markAlpha.animateTo(0f, tween(durationMillis = 220)) }
-        launch { markScale.animateTo(1.18f, tween(durationMillis = 260, easing = FastOutSlowInEasing)) }
-        launch { wordmarkAlpha.animateTo(1f, tween(durationMillis = 260, easing = FastOutSlowInEasing)) }
-        wordmarkScale.animateTo(1f, tween(durationMillis = 380, easing = FastOutSlowInEasing))
+        if (!reduceMotion) {
+            launch { glowAlpha.animateTo(1f, tween(durationMillis = 450, easing = FastOutSlowInEasing)) }
+            markScale.animateTo(1.08f, tween(durationMillis = 550, easing = FastOutSlowInEasing))
+        } else {
+            delay(550)
+        }
+        delay(200)
+        contentAlpha.animateTo(0f, tween(durationMillis = 300))
     }
 
     Box(
@@ -50,22 +57,25 @@ internal fun AppIntroContent(modifier: Modifier = Modifier) {
             .background(Color.Black),
         contentAlignment = Alignment.Center,
     ) {
+        Box(
+            modifier = Modifier
+                .size(IntroMarkSize * 3)
+                .graphicsLayer { alpha = glowAlpha.value * contentAlpha.value }
+                .background(
+                    Brush.radialGradient(
+                        0f to CinemaColors.Red.copy(alpha = 0.35f),
+                        0.5f to CinemaColors.Red.copy(alpha = 0.12f),
+                        1f to Color.Transparent,
+                    ),
+                ),
+        )
         AppBrandMark(
             modifier = Modifier
-                .size(72.dp)
+                .size(IntroMarkSize)
                 .graphicsLayer {
-                    alpha = markAlpha.value
+                    alpha = contentAlpha.value
                     scaleX = markScale.value
                     scaleY = markScale.value
-                },
-        )
-        AppBrandWordmark(
-            modifier = Modifier
-                .height(56.dp)
-                .graphicsLayer {
-                    alpha = wordmarkAlpha.value
-                    scaleX = wordmarkScale.value
-                    scaleY = wordmarkScale.value
                 },
         )
     }
