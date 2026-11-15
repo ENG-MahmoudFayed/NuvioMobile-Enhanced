@@ -184,7 +184,7 @@ private fun CastItem(
             ),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         if (!person.role.isNullOrBlank()) {

@@ -1,5 +1,6 @@
 package com.nuvio.app.features.details.components
 
+import com.nuvio.app.core.ui.CinemaPlayCircle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -222,6 +223,10 @@ private fun TrailerCard(
                 modifier = Modifier
                     .matchParentSize()
                     .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.2f))
+            )
+            CinemaPlayCircle(
+                modifier = Modifier.align(Alignment.Center),
+                size = 44.dp,
             )
         }
 
