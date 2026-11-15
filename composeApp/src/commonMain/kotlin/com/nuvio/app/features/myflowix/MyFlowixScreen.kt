@@ -1,5 +1,10 @@
 package com.nuvio.app.features.myflowix
 
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import com.nuvio.app.core.ui.CinemaShapes
+import com.nuvio.app.core.ui.CinemaSize
+import com.nuvio.app.core.ui.CinemaSpace
+import com.nuvio.app.core.ui.CinemaType
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.FileDownload
@@ -122,6 +127,7 @@ internal fun MyFlowixScreen(
     onDownloadsClick: () -> Unit,
     onNotificationsClick: (() -> Unit)? = null,
     onSwitchProfile: (() -> Unit)? = null,
+    onSelectProfile: ((NuvioProfile) -> Unit)? = null,
     onEditProfile: (() -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
@@ -304,6 +310,7 @@ internal fun MyFlowixScreen(
             onOpenAppSettings = onOpenAppSettings,
             onOpenAccount = onOpenAccount,
             onSwitchProfile = onSwitchProfile,
+            onSelectProfile = onSelectProfile,
             onEditProfile = onEditProfile,
             onSignOut = { showSignOutConfirm = true },
         )
@@ -368,7 +375,7 @@ private fun MyFlowixHeader(
 @Composable
 private fun SeeAllHeader(
     title: String,
-    onSeeAll: () -> Unit,
+    onSeeAll: (() -> Unit)?,
 ) {
     Row(
         modifier = Modifier
@@ -380,7 +387,7 @@ private fun SeeAllHeader(
             text = title,
             modifier = Modifier.weight(1f),
         )
-        Row(
+        if (onSeeAll != null) Row(
             modifier = Modifier
                 .heightIn(min = 44.dp)
                 .clip(MyFlowixRowShape)
@@ -414,14 +421,39 @@ private fun MyListEmptyRow(onClick: () -> Unit) {
     ) {
         SeeAllHeader(
             title = stringResource(Res.string.home_hero_my_list),
-            onSeeAll = onClick,
+            onSeeAll = null,
         )
-        Text(
-            text = stringResource(Res.string.my_flowix_my_list_empty),
-            modifier = Modifier.padding(horizontal = MyFlowixHorizontalPadding),
-            fontSize = 16.sp,
-            color = CinemaColors.TextSecondary,
-        )
+        Row(
+            modifier = Modifier
+                .padding(horizontal = MyFlowixHorizontalPadding)
+                .fillMaxWidth()
+                .clip(MyFlowixRowShape)
+                .background(CinemaColors.Surface)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(CinemaSpace.s16),
+            horizontalArrangement = Arrangement.spacedBy(CinemaSpace.s16),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CinemaShapes.Pill)
+                    .background(CinemaColors.SurfaceElevated),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.BookmarkBorder,
+                    contentDescription = null,
+                    tint = CinemaColors.TextSecondary,
+                    modifier = Modifier.size(CinemaSize.Icon),
+                )
+            }
+            Text(
+                text = stringResource(Res.string.my_flowix_my_list_empty),
+                style = CinemaType.body.copy(color = CinemaColors.TextSecondary),
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -506,6 +538,7 @@ private fun MyFlowixProfileMenu(
     onOpenAppSettings: () -> Unit,
     onOpenAccount: () -> Unit,
     onSwitchProfile: (() -> Unit)?,
+    onSelectProfile: ((NuvioProfile) -> Unit)?,
     onEditProfile: (() -> Unit)?,
     onSignOut: () -> Unit,
 ) {
@@ -524,7 +557,8 @@ private fun MyFlowixProfileMenu(
         onDismissRequest = { dismissThen() },
         sheetState = sheetState,
         containerColor = CinemaColors.Sheet,
-        showDragHandle = false,
+        showDragHandle = true,
+        fullHeight = true,
     ) {
         Column(
             modifier = Modifier
@@ -589,10 +623,16 @@ private fun MyFlowixProfileMenu(
             if (onSwitchProfile != null) {
                 Row(
                     modifier = Modifier.padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CinemaSpace.s8),
                 ) {
                     otherProfiles.take(3).forEach { profile ->
-                        ProfileChoice(label = profile.displayName(), onClick = { dismissThen(onSwitchProfile) }) {
+                        // A PIN-locked profile goes through the picker, which asks for the PIN.
+                        val open: () -> Unit = if (profile.pinEnabled || onSelectProfile == null) {
+                            { onSwitchProfile() }
+                        } else {
+                            { onSelectProfile(profile) }
+                        }
+                        ProfileChoice(label = profile.displayName(), onClick = { dismissThen(open) }) {
                             AppLoadingProfileAvatar(profile = profile, modifier = Modifier.size(72.dp))
                         }
                     }
@@ -667,7 +707,7 @@ private fun ProfileChoice(
 ) {
     Column(
         modifier = Modifier
-            .width(72.dp)
+            .width(84.dp)
             .clip(MyFlowixRowShape)
             .clickable(role = Role.Button, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -676,9 +716,9 @@ private fun ProfileChoice(
         avatar()
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.nuvio.colors.textPrimary,
+            style = CinemaType.caption.copy(color = Color.White),
             maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis,
         )
     }
