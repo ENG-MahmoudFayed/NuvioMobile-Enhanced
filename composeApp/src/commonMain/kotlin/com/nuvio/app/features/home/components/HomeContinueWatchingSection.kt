@@ -1110,16 +1110,10 @@ private fun ContinueWatchingPosterCard(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
-                .padding(horizontal = 10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (item.progressFraction > 0f) {
-                CinemaProgressLine(progress = item.progressFraction, height = 4.dp)
-            }
+        if (item.progressFraction > 0f) {
+            CinemaProgressLine(progress = item.progressFraction, height = 4.dp, rounded = false)
+        } else {
+            Spacer(Modifier.height(4.dp))
         }
 
         Row(
