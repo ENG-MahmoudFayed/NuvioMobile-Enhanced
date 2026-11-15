@@ -1,5 +1,10 @@
 package com.nuvio.app.features.details.components
 
+import androidx.compose.ui.layout.onSizeChanged
+import com.nuvio.app.core.format.extractReleaseYearForDisplay
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.CinemaSpace
+import com.nuvio.app.core.ui.CinemaType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -328,22 +333,25 @@ private fun PhoneCinemaHero(
     onHeroTrailerError: () -> Unit,
 ) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val reportedHeightPx = with(LocalDensity.current) { (statusBarTop + 6.dp + imageHeight).roundToPx() }
-    LaunchedEffect(reportedHeightPx) { onHeightChanged(reportedHeightPx) }
+    val pictureHeight = imageHeight + statusBarTop
     val trailerAlpha by animateFloatAsState(
         targetValue = if (heroTrailerReady) 1f else 0f,
         animationSpec = tween(durationMillis = 300),
         label = "detail_phone_trailer_alpha",
     )
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Spacer(modifier = Modifier.height(statusBarTop + 6.dp))
+    // The whole header, title included, counts as the hero: the floating bar's logo only fades in
+    // once the large title has left the screen.
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .onSizeChanged { size -> onHeightChanged(size.height) },
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heroStretchHeight(imageHeight, stretchPx)
-                .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp))
-                .background(Color(0xFF141414)),
+                .heroStretchHeight(pictureHeight, stretchPx)
+                .background(CinemaColors.Surface),
         ) {
             val imageUrl = meta.background ?: meta.poster
             if (imageUrl != null) {
@@ -386,6 +394,32 @@ private fun PhoneCinemaHero(
                             onClick = onHeroTrailerMuteToggle,
                         ),
                 )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(pictureHeight * 0.45f)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            1f to CinemaColors.Background,
+                        ),
+                    ),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(statusBarTop + 56.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.55f),
+                            1f to Color.Transparent,
+                        ),
+                    ),
+            )
+            if (heroTrailerSourceUrl != null) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -410,16 +444,13 @@ private fun PhoneCinemaHero(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(horizontal = CinemaSpace.PageMargin)
+                .padding(top = CinemaSpace.s4, bottom = CinemaSpace.s16),
+            verticalArrangement = Arrangement.spacedBy(CinemaSpace.s8),
         ) {
             Text(
                 text = meta.name,
-                color = Color.White,
-                fontSize = 27.sp,
-                lineHeight = 32.sp,
-                fontWeight = FontWeight.Bold,
+                style = CinemaType.screenTitle,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -431,7 +462,8 @@ private fun PhoneCinemaHero(
 /** "2013  16+  5 Seasons  IMDb 9.5" under the phone title. */
 @Composable
 internal fun DetailHeroFactsRow(meta: MetaDetails) {
-    val year = formatMetaReleaseLineForDetails(meta)
+    // Just the first year here ("2026", not "2026 -"); Show Details spells out "2026 - Present".
+    val year = meta.releaseInfo?.let(::extractReleaseYearForDisplay)?.toString()
     val ageBadge = meta.ageRating?.trim()?.takeIf { it.isNotBlank() }
     val seasonCount = remember(meta.videos) {
         meta.videos.mapNotNull { it.season }.filter { it > 0 }.distinct().size
@@ -444,14 +476,14 @@ internal fun DetailHeroFactsRow(meta: MetaDetails) {
     val imdbRating = meta.imdbRating?.takeIf { raw -> raw.toDoubleOrNull()?.let { it > 0.0 } == true }
     if (year == null && ageBadge == null && lengthText == null && imdbRating == null) return
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(CinemaSpace.s12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        year?.let { Text(it, color = Color.White, fontSize = 18.sp) }
+        year?.let { Text(it, style = CinemaType.body) }
         ageBadge?.let { DetailHeroMetaBadge(text = it) }
-        lengthText?.let { Text(it, color = Color.White, fontSize = 18.sp) }
+        lengthText?.let { Text(it, style = CinemaType.body) }
         imdbRating?.let {
-            Text("IMDb $it", color = ImdbYellow, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("IMDb $it", style = CinemaType.body.copy(color = ImdbYellow, fontWeight = FontWeight.SemiBold))
         }
     }
 }
