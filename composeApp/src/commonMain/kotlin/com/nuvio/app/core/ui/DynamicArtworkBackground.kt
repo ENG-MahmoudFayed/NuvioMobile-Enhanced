@@ -1,5 +1,6 @@
 package com.nuvio.app.core.ui
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -42,8 +43,10 @@ fun DynamicArtworkBackground(
 ) {
     val active = rememberDynamicArtworkBackgroundEnabled()
     if (!active) {
-        CompositionLocalProvider(LocalDynamicArtworkBackgroundActive provides false) {
-            content()
+        Box(modifier = modifier.fillMaxSize()) {
+            CompositionLocalProvider(LocalDynamicArtworkBackgroundActive provides false) {
+                content()
+            }
         }
         return
     }
@@ -68,7 +71,20 @@ fun DynamicArtworkBackground(
         label = "dynamic_artwork_wash_color",
     )
 
-    Box(modifier = modifier.fillMaxSize().drawBehind { drawRect(washColor.value) }) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .drawBehind {
+                drawRect(baseColor)
+                drawRect(
+                    Brush.verticalGradient(
+                        0f to washColor.value,
+                        0.45f to washColor.value.copy(alpha = 0.35f),
+                        0.75f to baseColor,
+                    ),
+                )
+            },
+    ) {
         CompositionLocalProvider(
             LocalDynamicArtworkBackgroundActive provides true,
             LocalDynamicArtworkBackgroundColor provides washColor,
