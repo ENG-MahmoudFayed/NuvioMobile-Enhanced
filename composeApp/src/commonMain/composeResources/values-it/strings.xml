@@ -2475,4 +2475,11 @@
     <string name="search_recommended_title">Serie TV e film consigliati</string>
     <string name="search_results_title">Film e serie TV</string>
     <string name="search_cancel">Annulla</string>
+    <string name="details_rate">Valuta</string>
+    <string name="details_rated">Voto %1$d</string>
+    <string name="details_share">Condividi</string>
+    <string name="details_my_list">La mia lista</string>
+    <string name="details_seasons_count">%1$d stagioni</string>
+    <string name="details_season_single">1 stagione</string>
+    <string name="details_episodes">Episodi</string>
 </resources>

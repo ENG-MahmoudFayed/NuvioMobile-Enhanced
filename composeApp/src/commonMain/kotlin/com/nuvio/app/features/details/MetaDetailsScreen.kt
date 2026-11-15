@@ -1,5 +1,12 @@
 package com.nuvio.app.features.details
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.Role
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.share.rememberShareText
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -2476,6 +2483,7 @@ private fun ConfiguredMetaSections(
     animatedVisibilityScope: AnimatedVisibilityScope?,
 ) {
     val enabledItems = settings.items.filter { it.enabled }
+    val shareText = rememberShareText()
 
     val sectionHasContent: (MetaScreenSectionKey) -> Boolean = { key ->
         when (key) {
@@ -2515,6 +2523,7 @@ private fun ConfiguredMetaSections(
                     iconActionRow = settings.iconActionRow,
                     userRating = userRating,
                     onRateClick = onRateClick,
+                    onShareClick = { shareText(meta.shareLine()) },
                 )
             }
             MetaScreenSectionKey.OVERVIEW -> {
@@ -2523,6 +2532,8 @@ private fun ConfiguredMetaSections(
                     showOverallRatings = settings.showOverallRatings,
                     isMdbListActive = isMdbListActive,
                     horizontalScrollPadding = horizontalScrollPadding,
+                    // On phones the year, age, length and rating sit under the title in the hero.
+                    showMetaRow = isTablet,
                 )
             }
             MetaScreenSectionKey.PRODUCTION -> {
@@ -2679,35 +2690,44 @@ private fun TabbedSectionGroup(
             val titleSize = if (maxWidth >= 720.dp) 22.sp else 20.sp
             val headerStyle = MaterialTheme.typography.titleLarge.copy(
                 fontSize = titleSize,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // The active tab wears a short red bar above its title.
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(28.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
                 tabs.forEachIndexed { index, (_, title) ->
-                    if (index > 0) {
-                        Text(
-                            text = "|",
-                            style = headerStyle,
-                            color = headerColor.copy(alpha = 0.45f),
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                        )
-                    }
-
-                    Text(
-                        text = title,
-                        style = headerStyle,
-                        color = if (index == selectedIndex) {
-                            headerColor
-                        } else {
-                            headerColor.copy(alpha = 0.55f)
-                        },
-                        maxLines = 1,
+                    val selected = index == selectedIndex
+                    Column(
                         modifier = Modifier
+                            .width(IntrinsicSize.Max)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
+                                role = Role.Tab,
                             ) { selectedIndex = index },
-                    )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(5.dp)
+                                .background(if (selected) CinemaColors.Red else Color.Transparent),
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = title,
+                            style = headerStyle,
+                            color = if (selected) {
+                                headerColor
+                            } else {
+                                headerColor.copy(alpha = 0.6f)
+                            },
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -2745,4 +2765,12 @@ private fun Color.blendTowards(target: Color, fraction: Float): Color {
         blue = blue + (target.blue - blue) * clamped,
         alpha = alpha + (target.alpha - alpha) * clamped,
     )
+}
+
+/** "Title (Year)" and, when known, its IMDb page: what the Share action hands to the share sheet. */
+private fun MetaDetails.shareLine(): String {
+    val year = releaseInfo?.take(4)?.takeIf { it.all(Char::isDigit) }
+    val heading = if (year != null) "$name ($year)" else name
+    val imdb = (imdbId ?: id.takeIf { it.startsWith("tt") })?.let { "https://www.imdb.com/title/$it/" }
+    return listOfNotNull(heading, imdb).joinToString(separator = "\n")
 }

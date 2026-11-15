@@ -1,5 +1,8 @@
 package com.nuvio.app.features.details
 
+import com.nuvio.app.core.onboarding.OnboardingFlags
+import com.nuvio.app.core.onboarding.OnboardingStorage
+import com.nuvio.app.core.storage.ProfileScopedKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -273,8 +276,28 @@ object MetaScreenSettingsRepository {
         }
 
         normalizePreferences()
+        applyCinemaDetailTabsOnce()
         publish()
         persist()
+    }
+
+    /**
+     * Profiles that never grouped sections into tabs get the Cinema details layout once:
+     * Episodes, Collection and More Like This as tabs. Later changes in settings stick.
+     */
+    private fun applyCinemaDetailTabsOnce() {
+        val flag = ProfileScopedKey.of(OnboardingFlags.CinemaDetailTabs)
+        if (OnboardingStorage.isDone(flag)) return
+        OnboardingStorage.markDone(flag)
+        if (preferences.values.any { it.tabGroup != null }) return
+        tabLayout = true
+        listOf(
+            MetaScreenSectionKey.EPISODES,
+            MetaScreenSectionKey.COLLECTION,
+            MetaScreenSectionKey.MORE_LIKE_THIS,
+        ).filter { it.canBeTabbed }.forEach { key ->
+            preferences[key]?.let { preferences[key] = it.copy(tabGroup = CinemaDetailTabGroup) }
+        }
     }
 
     fun onProfileChanged() {
@@ -596,3 +619,5 @@ object MetaScreenSettingsRepository {
         )
     }
 }
+
+private const val CinemaDetailTabGroup = 1

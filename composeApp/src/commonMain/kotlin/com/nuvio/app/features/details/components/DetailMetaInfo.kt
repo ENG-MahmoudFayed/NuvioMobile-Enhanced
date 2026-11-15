@@ -75,6 +75,7 @@ fun DetailMetaInfo(
     horizontalScrollPadding: Dp = 0.dp,
     showOverallRatings: Boolean = true,
     isMdbListActive: Boolean = false,
+    showMetaRow: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -88,10 +89,12 @@ fun DetailMetaInfo(
         val validImdbRating = meta.imdbRating
             ?.takeIf { showOverallRatings && !isMdbListActive }
             ?.takeIf { raw -> raw.toDoubleOrNull()?.let { it > 0.0 } == true }
-        val hasMetaRow = releaseLine != null ||
-            runtimeText != null ||
-            ageBadge != null ||
-            validImdbRating != null
+        val hasMetaRow = showMetaRow && (
+            releaseLine != null ||
+                runtimeText != null ||
+                ageBadge != null ||
+                validImdbRating != null
+            )
         if (hasMetaRow) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -286,11 +289,8 @@ internal fun DetailHeroMetaBadge(
     val borderColor = contentColor.copy(alpha = 0.55f)
     Row(
         modifier = Modifier
-            .border(
-                border = BorderStroke(1.dp, borderColor),
-                shape = RoundedCornerShape(6.dp),
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .background(Color(0xFF4D4D4D), RoundedCornerShape(3.dp))
+            .padding(horizontal = 7.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

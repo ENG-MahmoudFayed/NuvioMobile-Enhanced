@@ -12,4 +12,5 @@ internal expect object OnboardingStorage {
 internal object OnboardingFlags {
     const val ProfilesIntroSeen = "profiles_intro_seen"
     const val CinemaThemeMigrated = "cinema_theme_migrated"
+    const val CinemaDetailTabs = "cinema_detail_tabs"
 }

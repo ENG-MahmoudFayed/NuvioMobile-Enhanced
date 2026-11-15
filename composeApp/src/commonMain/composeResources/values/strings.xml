@@ -2973,4 +2973,11 @@
     <string name="search_recommended_title">Recommended TV Shows &amp; Movies</string>
     <string name="search_results_title">Movies &amp; TV</string>
     <string name="search_cancel">Cancel</string>
+    <string name="details_rate">Rate</string>
+    <string name="details_rated">Rated %1$d</string>
+    <string name="details_share">Share</string>
+    <string name="details_my_list">My List</string>
+    <string name="details_seasons_count">%1$d Seasons</string>
+    <string name="details_season_single">1 Season</string>
+    <string name="details_episodes">Episodes</string>
 </resources>

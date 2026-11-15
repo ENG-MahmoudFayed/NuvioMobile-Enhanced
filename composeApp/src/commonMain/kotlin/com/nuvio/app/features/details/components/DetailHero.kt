@@ -1,5 +1,14 @@
 package com.nuvio.app.features.details.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
+import com.nuvio.app.features.details.formatMetaReleaseLineForDetails
+import com.nuvio.app.features.details.formatRuntimeForDisplay
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -82,6 +91,25 @@ fun DetailHero(
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
     ) {
+        if (!isTablet) {
+            PhoneCinemaHero(
+                meta = meta,
+                imageHeight = (maxWidth - verticalBarWidth()) * (9f / 16f),
+                stretchPx = stretchPx,
+                onHeightChanged = onHeightChanged,
+                heroTrailerSourceUrl = heroTrailerSourceUrl,
+                heroTrailerSourceAudioUrl = heroTrailerSourceAudioUrl,
+                heroTrailerReady = heroTrailerReady,
+                heroTrailerPlayWhenReady = heroTrailerPlayWhenReady,
+                heroTrailerMuted = heroTrailerMuted,
+                onBackdropLoaded = onBackdropLoaded,
+                onHeroTrailerMuteToggle = onHeroTrailerMuteToggle,
+                onHeroTrailerReady = onHeroTrailerReady,
+                onHeroTrailerEnded = onHeroTrailerEnded,
+                onHeroTrailerError = onHeroTrailerError,
+            )
+            return@BoxWithConstraints
+        }
         val heroHeight = detailHeroHeight(maxWidth - verticalBarWidth(), isTablet)
         val trailerAlpha by animateFloatAsState(
             targetValue = if (heroTrailerReady) 1f else 0f,
@@ -277,3 +305,151 @@ private fun detailHeroHeight(maxWidth: Dp, isTablet: Boolean): Dp =
     } else {
         (maxWidth * 0.42f).coerceIn(300.dp, 420.dp)
     }
+
+/**
+ * The phone details header: the backdrop (or trailer) as a 16:9 card with rounded top corners
+ * just under the status bar, then the title in bold on the left and a line of facts under it.
+ */
+@Composable
+private fun PhoneCinemaHero(
+    meta: MetaDetails,
+    imageHeight: Dp,
+    stretchPx: () -> Float,
+    onHeightChanged: (Int) -> Unit,
+    heroTrailerSourceUrl: String?,
+    heroTrailerSourceAudioUrl: String?,
+    heroTrailerReady: Boolean,
+    heroTrailerPlayWhenReady: () -> Boolean,
+    heroTrailerMuted: Boolean,
+    onBackdropLoaded: (Painter, ImageBitmap?) -> Unit,
+    onHeroTrailerMuteToggle: () -> Unit,
+    onHeroTrailerReady: () -> Unit,
+    onHeroTrailerEnded: () -> Unit,
+    onHeroTrailerError: () -> Unit,
+) {
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val reportedHeightPx = with(LocalDensity.current) { (statusBarTop + 6.dp + imageHeight).roundToPx() }
+    LaunchedEffect(reportedHeightPx) { onHeightChanged(reportedHeightPx) }
+    val trailerAlpha by animateFloatAsState(
+        targetValue = if (heroTrailerReady) 1f else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "detail_phone_trailer_alpha",
+    )
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.height(statusBarTop + 6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heroStretchHeight(imageHeight, stretchPx)
+                .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp))
+                .background(Color(0xFF141414)),
+        ) {
+            val imageUrl = meta.background ?: meta.poster
+            if (imageUrl != null) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = meta.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heroStretchZoom(stretchPx),
+                    contentScale = ContentScale.Crop,
+                    onSuccess = { state ->
+                        onBackdropLoaded(
+                            state.painter,
+                            loadedBackdropImageBitmap(state.result),
+                        )
+                    },
+                )
+            }
+            if (heroTrailerSourceUrl != null) {
+                HeroTrailerPlayerSurface(
+                    sourceUrl = heroTrailerSourceUrl,
+                    sourceAudioUrl = heroTrailerSourceAudioUrl,
+                    playWhenReady = heroTrailerPlayWhenReady() && !MiniPlayerController.isActive,
+                    muted = heroTrailerMuted,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heroStretchZoom(stretchPx)
+                        .graphicsLayer { alpha = trailerAlpha },
+                    onReady = onHeroTrailerReady,
+                    onEnded = onHeroTrailerEnded,
+                    onError = onHeroTrailerError,
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            enabled = heroTrailerReady,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onHeroTrailerMuteToggle,
+                        ),
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(12.dp)
+                        .size(34.dp)
+                        .graphicsLayer { alpha = trailerAlpha }
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(Color.Black.copy(alpha = 0.55f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = if (heroTrailerMuted) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = meta.name,
+                color = Color.White,
+                fontSize = 27.sp,
+                lineHeight = 32.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            DetailHeroFactsRow(meta = meta)
+        }
+    }
+}
+
+/** "2013  16+  5 Seasons  IMDb 9.5" under the phone title. */
+@Composable
+internal fun DetailHeroFactsRow(meta: MetaDetails) {
+    val year = formatMetaReleaseLineForDetails(meta)
+    val ageBadge = meta.ageRating?.trim()?.takeIf { it.isNotBlank() }
+    val seasonCount = remember(meta.videos) {
+        meta.videos.mapNotNull { it.season }.filter { it > 0 }.distinct().size
+    }
+    val lengthText = when {
+        seasonCount == 1 -> stringResource(Res.string.details_season_single)
+        seasonCount > 1 -> stringResource(Res.string.details_seasons_count, seasonCount)
+        else -> formatRuntimeForDisplay(meta.runtime)
+    }
+    val imdbRating = meta.imdbRating?.takeIf { raw -> raw.toDoubleOrNull()?.let { it > 0.0 } == true }
+    if (year == null && ageBadge == null && lengthText == null && imdbRating == null) return
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        year?.let { Text(it, color = Color.White, fontSize = 18.sp) }
+        ageBadge?.let { DetailHeroMetaBadge(text = it) }
+        lengthText?.let { Text(it, color = Color.White, fontSize = 18.sp) }
+        imdbRating?.let {
+            Text("IMDb $it", color = ImdbYellow, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}

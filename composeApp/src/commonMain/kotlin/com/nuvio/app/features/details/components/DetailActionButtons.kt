@@ -1,5 +1,14 @@
 package com.nuvio.app.features.details.components
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ThumbUp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import com.nuvio.app.core.ui.pressScale
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -19,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -59,6 +69,10 @@ import com.nuvio.app.core.ui.appIconPainter
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.action_play
 import nuvio.composeapp.generated.resources.details_download_action
+import nuvio.composeapp.generated.resources.details_my_list
+import nuvio.composeapp.generated.resources.details_rate
+import nuvio.composeapp.generated.resources.details_rated
+import nuvio.composeapp.generated.resources.details_share
 import nuvio.composeapp.generated.resources.details_actions_menu_label
 import nuvio.composeapp.generated.resources.hero_add_to_library
 import nuvio.composeapp.generated.resources.hero_mark_unwatched
@@ -106,6 +120,7 @@ fun DetailActionButtons(
     iconActions: List<DetailSecondaryAction> = emptyList(),
     userRating: Int? = null,
     onRateClick: (() -> Unit)? = null,
+    onShareClick: (() -> Unit)? = null,
 ) {
     val playPainter = appIconPainter(AppIconResource.PlayerPlay)
     val buttonHeight = if (isTablet) 56.dp else 52.dp
@@ -138,19 +153,43 @@ fun DetailActionButtons(
                 onPlayLongClick = onPlayLongClick,
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (iconActions.isNotEmpty()) {
-                DetailIconActionRow(
-                    actions = iconActions,
-                    preferredSize = iconButtonSize,
-                    preferredSpacing = if (isTablet) 20.dp else 16.dp,
-                    modifier = Modifier.fillMaxWidth(),
+            if (onDownloadClick != null) {
+                DownloadPillButton(
+                    buttonHeight = buttonHeight,
+                    shape = playShape,
+                    isTablet = isTablet,
+                    onClick = onDownloadClick,
                 )
             }
-            onRateClick?.let { rate ->
-                UserRatingStars(
-                    rating = userRating,
-                    onClick = rate,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+            val labelledActions = buildList {
+                addAll(iconActions)
+                onRateClick?.let { rate ->
+                    add(
+                        DetailSecondaryAction(
+                            label = userRating?.let { stringResource(Res.string.details_rated, it) }
+                                ?: stringResource(Res.string.details_rate),
+                            icon = if (userRating != null) Icons.Rounded.ThumbUp else Icons.Outlined.ThumbUp,
+                            isActive = userRating != null,
+                            onClick = rate,
+                        ),
+                    )
+                }
+                onShareClick?.let { share ->
+                    add(
+                        DetailSecondaryAction(
+                            label = stringResource(Res.string.details_share),
+                            icon = Icons.AutoMirrored.Outlined.Send,
+                            onClick = share,
+                        ),
+                    )
+                }
+            }
+            if (labelledActions.isNotEmpty()) {
+                DetailLabelledActionRow(
+                    actions = labelledActions,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
                 )
             }
             return@Column
@@ -291,52 +330,12 @@ fun DetailActionButtons(
     }
 
         if (onDownloadClick != null) {
-            val downloadGlassActive = isAmbientLiquidGlassActive()
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(buttonHeight)
-                    .then(
-                        if (downloadGlassActive) {
-                            Modifier.ambientLiquidGlass(
-                                shape = playShape,
-                                tint = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                fallback = Color.Transparent,
-                            )
-                        } else {
-                            Modifier
-                        },
-                    ),
+            DownloadPillButton(
+                buttonHeight = buttonHeight,
                 shape = playShape,
-                color = if (downloadGlassActive) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(role = Role.Button, onClick = onDownloadClick)
-                        .height(buttonHeight),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Download,
-                        contentDescription = null,
-                        modifier = Modifier.size(if (isTablet) 20.dp else 18.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(Res.string.details_download_action),
-                        style = if (isTablet) {
-                            MaterialTheme.typography.titleMedium
-                        } else {
-                            MaterialTheme.typography.titleSmall
-                        },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+                isTablet = isTablet,
+                onClick = onDownloadClick,
+            )
         }
         onRateClick?.let { rate ->
             UserRatingStars(
@@ -371,6 +370,7 @@ fun DetailActions(
     iconActionRow: Boolean = false,
     userRating: Int? = null,
     onRateClick: (() -> Unit)? = null,
+    onShareClick: (() -> Unit)? = null,
 ) {
     val actionSet = detailActionSet(
         isSaved = isSaved,
@@ -380,7 +380,7 @@ fun DetailActions(
         onWatchedClick = onWatchedClick,
         onSaveClick = onSaveClick,
         onSaveLongClick = onSaveLongClick,
-        onDownloadClick = onDownloadClick,
+        onDownloadClick = null,
         onPlayFromStartClick = onPlayFromStartClick,
         onPlayExternallyClick = onPlayExternallyClick,
     )
@@ -401,10 +401,11 @@ fun DetailActions(
         },
         isTablet = isTablet,
         onPlayClick = onPlayClick,
-        onDownloadClick = onDownloadClick.takeIf { !iconActionRow },
+        onDownloadClick = onDownloadClick,
         onPlayLongClick = onPlayLongClick,
         userRating = userRating,
         onRateClick = onRateClick,
+        onShareClick = onShareClick,
     )
 }
 
@@ -443,9 +444,8 @@ private fun detailActionSet(
         onClick = onWatchedClick,
     )
     val saveAction = DetailSecondaryAction(
-        label = stringResource(if (isSaved) Res.string.hero_remove_from_library else Res.string.hero_add_to_library),
-        icon = Icons.Default.Add,
-        drawable = Res.drawable.sidebar_library.takeIf { isSaved },
+        label = stringResource(Res.string.details_my_list),
+        icon = if (isSaved) Icons.Rounded.Check else Icons.Default.Add,
         isActive = isSaved,
         onClick = onSaveClick,
         onLongClick = onSaveLongClick,
@@ -727,19 +727,11 @@ private fun PlayButton(
         Surface(
             modifier = modifier
                 .height(buttonHeight)
-                .then(
-                    if (playEnabled) {
-                        Modifier
-                            .clip(playShape)
-                            .background(MaterialTheme.themePalette.accentBrush())
-                    } else {
-                        Modifier
-                    },
-                ),
+                .clip(playShape),
             shape = playShape,
-            color = if (playEnabled) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant,
+            color = if (playEnabled) Color.White else MaterialTheme.colorScheme.surfaceVariant,
             contentColor = if (playEnabled) {
-                MaterialTheme.nuvio.colors.onAccent
+                Color.Black
             } else {
                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             },
@@ -762,16 +754,13 @@ private fun PlayButton(
                 Icon(
                     painter = playPainter,
                     contentDescription = null,
-                    modifier = Modifier.size(if (isTablet) 20.dp else 18.dp),
+                    modifier = Modifier.size(if (isTablet) 26.dp else 24.dp),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = playLabel,
-                    style = if (isTablet) {
-                        MaterialTheme.typography.titleMedium
-                    } else {
-                        MaterialTheme.typography.titleSmall
-                    },
+                    fontSize = if (isTablet) 20.sp else 19.sp,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -803,5 +792,107 @@ private fun fitIconActionRow(
         IconActionRowLayout(shrunkSize, minSpacing, true)
     } else {
         IconActionRowLayout(minSize, minSpacing, false)
+    }
+}
+
+/** Dark full-width pill under Play: "Download". */
+@Composable
+private fun DownloadPillButton(
+    buttonHeight: Dp,
+    shape: Shape,
+    isTablet: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(buttonHeight)
+            .clip(shape)
+            .background(Color(0xFF2B2B2B))
+            .clickable(role = Role.Button, onClick = onClick),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Download,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(if (isTablet) 26.dp else 24.dp),
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = stringResource(Res.string.details_download_action),
+            color = Color.White,
+            fontSize = if (isTablet) 20.sp else 19.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Plain white icons with a bold caption underneath, spread evenly across the width. */
+@Composable
+private fun DetailLabelledActionRow(
+    actions: List<DetailSecondaryAction>,
+    modifier: Modifier = Modifier,
+) {
+    val fits = actions.size <= 5
+    Row(
+        modifier = modifier.then(if (fits) Modifier else Modifier.horizontalScroll(rememberScrollState())),
+        horizontalArrangement = if (fits) Arrangement.SpaceEvenly else Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        actions.forEach { action ->
+            DetailLabelledAction(action = action)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DetailLabelledAction(action: DetailSecondaryAction) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(
+        modifier = Modifier
+            .width(78.dp)
+            .pressScale(interactionSource)
+            .clip(RoundedCornerShape(8.dp))
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Button,
+                onClick = action.onClick,
+                onLongClick = action.onLongClick,
+            )
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (action.drawable != null) {
+            Icon(
+                painter = painterResource(action.drawable),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(30.dp),
+            )
+        } else {
+            Icon(
+                imageVector = action.icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(30.dp),
+            )
+        }
+        Text(
+            text = action.label,
+            color = Color.White,
+            fontSize = 13.sp,
+            lineHeight = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
