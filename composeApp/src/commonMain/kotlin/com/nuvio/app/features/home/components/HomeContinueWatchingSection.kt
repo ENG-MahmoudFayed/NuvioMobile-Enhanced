@@ -358,8 +358,10 @@ private fun HomeContinueWatchingSectionContent(
         }
         val displayEntries = disintegration.sync(dataSourceKey, items, disintegrationRequest)
 
+        val defaultTitle = stringResource(Res.string.compose_settings_page_continue_watching)
         NuvioShelfSection(
-            title = title ?: stringResource(Res.string.compose_settings_page_continue_watching),
+            title = title ?: defaultTitle,
+            shortTitle = defaultTitle.takeIf { title != null },
             entries = displayEntries,
             modifier = modifier,
             headerHorizontalPadding = sectionPadding,

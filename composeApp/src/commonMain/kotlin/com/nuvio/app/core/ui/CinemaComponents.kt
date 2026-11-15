@@ -17,6 +17,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -61,6 +62,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -336,25 +338,39 @@ internal fun CinemaIconAction(
     }
 }
 
-/** Section heading on one line that shrinks down to 85% before it truncates. */
+/**
+ * Section heading on one line that shrinks down to 85% before it truncates. When [shortText] is
+ * given and [text] would not fit even at 85%, the shorter wording is shown instead.
+ */
 @Composable
 internal fun CinemaSectionTitle(
     text: String,
     modifier: Modifier = Modifier,
+    shortText: String? = null,
 ) {
     val style = CinemaType.sectionTitle
-    BasicText(
-        text = text,
-        style = style,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        autoSize = TextAutoSize.StepBased(
-            minFontSize = style.fontSize * 0.85f,
-            maxFontSize = style.fontSize,
-            stepSize = 0.5.sp,
-        ),
-        modifier = modifier,
-    )
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier = modifier) {
+        val available = constraints.maxWidth
+        val shown = if (shortText == null) {
+            text
+        } else {
+            val smallest = style.copy(fontSize = style.fontSize * 0.85f)
+            val width = measurer.measure(text, style = smallest, maxLines = 1, softWrap = false).size.width
+            if (width <= available) text else shortText
+        }
+        BasicText(
+            text = shown,
+            style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = style.fontSize * 0.85f,
+                maxFontSize = style.fontSize,
+                stepSize = 0.5.sp,
+            ),
+        )
+    }
 }
 
 /**

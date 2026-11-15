@@ -76,6 +76,7 @@ fun <T> NuvioShelfSection(
     key: ((T) -> Any)? = null,
     animatePlacement: Boolean = false,
     state: LazyListState = rememberLazyListState(),
+    shortTitle: String? = null,
     itemContent: @Composable (T) -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
@@ -89,6 +90,7 @@ fun <T> NuvioShelfSection(
         if (title.isNotBlank()) {
             NuvioShelfSectionHeader(
                 title = title,
+                shortTitle = shortTitle,
                 modifier = Modifier.padding(horizontal = headerHorizontalPadding),
                 onViewAllClick = onViewAllClick,
                 viewAllPillSize = viewAllPillSize,
@@ -278,6 +280,7 @@ fun NuvioPosterCard(
 private fun NuvioShelfSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
+    shortTitle: String? = null,
     onViewAllClick: (() -> Unit)? = null,
     viewAllPillSize: NuvioViewAllPillSize = NuvioViewAllPillSize.Default,
 ) {
@@ -293,6 +296,7 @@ private fun NuvioShelfSectionHeader(
         ) {
             CinemaSectionTitle(
                 text = title,
+                shortText = shortTitle,
                 modifier = Modifier.weight(1f),
             )
             val viewAllPlaceholderModifier = if (onViewAllClick == null) {
