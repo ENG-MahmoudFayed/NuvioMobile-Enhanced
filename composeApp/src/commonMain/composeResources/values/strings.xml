@@ -2956,4 +2956,6 @@
     <string name="profiles_intro_household">Add up to 6 profiles for everyone who watches with you</string>
     <string name="profiles_intro_next">Next</string>
     <string name="profiles_intro_got_it">Got It</string>
+    <string name="profile_choose_your_profile">Choose Your Profile</string>
+    <string name="profile_add_short">Add</string>
 </resources>

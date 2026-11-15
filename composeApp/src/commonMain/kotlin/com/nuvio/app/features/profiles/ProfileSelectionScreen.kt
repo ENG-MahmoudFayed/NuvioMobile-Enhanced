@@ -1,10 +1,23 @@
 package com.nuvio.app.features.profiles
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import coil3.compose.AsyncImage
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.CinemaProfileAvatarShape
+import com.nuvio.app.features.tmdb.TmdbTrendingArt
+import com.nuvio.app.features.tmdb.TmdbTrendingArtwork
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -23,9 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -182,200 +193,209 @@ fun ProfileSelectionScreen(
     }
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val backgroundProfile = profileState.activeProfile ?: profileState.profiles.firstOrNull()
+    var heroArt by remember { mutableStateOf<TmdbTrendingArt?>(null) }
+    LaunchedEffect(Unit) { heroArt = TmdbTrendingArtwork.load().firstOrNull() }
+    // Where the first row of avatars is centred: the grey sheet's curved edge runs through it.
+    var sheetTopPx by remember { mutableStateOf<Float?>(null) }
+    var containerTopPx by remember { mutableStateOf(0f) }
+    val avatarHalfPx = with(LocalDensity.current) { ProfileTileAvatarSize.toPx() / 2f }
 
     BoxWithConstraints(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(Color.Black)
+            .onGloballyPositioned { containerTopPx = it.positionInRoot().y },
     ) {
         val isTabletLayout = maxWidth >= 768.dp
-        ProfileBackgroundBackdrop(
-            profile = backgroundProfile,
-            modifier = Modifier.fillMaxSize(),
-        )
-
-        run {
-            Column(
+        val heroHeight = maxHeight * if (isTabletLayout) 0.58f else 0.62f
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(heroHeight),
+        ) {
+            ProfileBackgroundBackdrop(
+                profile = backgroundProfile,
+                modifier = Modifier.fillMaxSize(),
+                fallback = {
+                    heroArt?.let { art ->
+                        AsyncImage(
+                            model = if (isTabletLayout) art.backdropUrl ?: art.posterUrl else art.posterUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = if (isTabletLayout) 0.dp else 28.dp)
+                                .padding(top = statusBarTop + 40.dp),
+                        )
+                    }
+                },
+            )
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = statusBarTop)
-                    .then(
-                        if (isTabletLayout) {
-                            Modifier
-                        } else {
-                            Modifier.verticalScroll(rememberScrollState())
-                        },
-                    )
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = if (isTabletLayout) Arrangement.Center else Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Spacer(modifier = Modifier.height(if (isTabletLayout) 0.dp else 60.dp))
+                    .background(
+                        Brush.radialGradient(
+                            0f to Color.Transparent,
+                            0.65f to Color.Black.copy(alpha = 0.35f),
+                            1f to Color.Black,
+                        ),
+                    ),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.55f),
+                            0.18f to Color.Transparent,
+                            0.7f to Color.Transparent,
+                            1f to Color.Black,
+                        ),
+                    ),
+            )
+        }
 
-                // Not wrapped in `contentFadeAlpha` like the rest of this screen below: the
-                // wordmark and the Supporter badge next to it both stay fully visible through the
-                // tap→center transition, while everything underneath fades away.
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AppBrandWordmark(
-                        modifier = Modifier
-                            .height(if (isTabletLayout) 42.dp else 34.dp)
-                            .graphicsLayer {
-                                alpha = titleAlpha.value
-                                translationY = titleOffset.value
-                            },
-                    )
-                    SupporterBadgeIfPresent(
-                        height = if (isTabletLayout) 42.dp else 34.dp,
-                        modifier = Modifier.graphicsLayer {
+        sheetTopPx?.let { top ->
+            Canvas(
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = contentFadeAlpha.value },
+            ) {
+                val arc = size.width * 0.05f
+                val path = Path().apply {
+                    moveTo(0f, top + arc)
+                    quadraticTo(size.width / 2f, top - arc, size.width, top + arc)
+                    lineTo(size.width, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
+                drawPath(
+                    path = path,
+                    brush = Brush.verticalGradient(
+                        0f to Color(0xFF3A3A3A),
+                        0.35f to Color(0xFF2E2E2E),
+                        1f to Color(0xFF262626),
+                        startY = top - arc,
+                        endY = size.height,
+                    ),
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(statusBarTop + 14.dp))
+            // Not wrapped in `contentFadeAlpha` like the rest of this screen below: the
+            // wordmark and the Supporter badge next to it both stay fully visible through the
+            // tap-to-centre transition, while everything underneath fades away.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AppBrandWordmark(
+                    modifier = Modifier
+                        .height(if (isTabletLayout) 34.dp else 28.dp)
+                        .graphicsLayer {
                             alpha = titleAlpha.value
                             translationY = titleOffset.value
                         },
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(if (isTabletLayout) 22.dp else 18.dp))
-
-              Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer { alpha = contentFadeAlpha.value },
-                horizontalAlignment = Alignment.CenterHorizontally,
-              ) {
-                Text(
-                    text = stringResource(Res.string.profile_who_is_watching),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 30.sp,
-                        letterSpacing = 0.sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
+                )
+                SupporterBadgeIfPresent(
+                    height = if (isTabletLayout) 34.dp else 28.dp,
                     modifier = Modifier.graphicsLayer {
                         alpha = titleAlpha.value
                         translationY = titleOffset.value
                     },
                 )
+            }
+            Spacer(Modifier.height((heroHeight - statusBarTop - 96.dp).coerceAtLeast(120.dp)))
 
-                Spacer(modifier = Modifier.height(if (isTabletLayout) 28.dp else 48.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = contentFadeAlpha.value },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(Res.string.profile_choose_your_profile),
+                    color = CinemaColors.TextSecondary,
+                    fontSize = 19.sp,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = titleAlpha.value
+                        translationY = titleOffset.value
+                    },
+                )
+                Spacer(Modifier.height(14.dp))
 
                 val profiles = profileState.profiles
-                val items = profiles.size + if (isEditMode && profiles.size < MAX_PROFILES) 1 else 0
-
-                if (isTabletLayout) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .horizontalScroll(rememberScrollState())
-                                .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(20.dp),
-                        ) {
-                            for (currentIndex in 0 until items) {
-                                if (currentIndex < profiles.size) {
-                                    val profile = profiles[currentIndex]
-                                    ProfileAvatarCard(
-                                        profile = profile,
-                                        isEditMode = isEditMode,
-                                        animDelay = currentIndex * 80,
-                                        enabled = interactionEnabled,
-                                        onClick = { tapCenter ->
-                                            onProfileClick(profile, tapCenter)
-                                        },
-                                    )
-                                } else {
-                                    AddProfileCard(
-                                        animDelay = currentIndex * 80,
-                                        enabled = interactionEnabled,
-                                        onClick = onAddProfile,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        var index = 0
-                        while (index < items) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                for (col in 0..1) {
-                                    if (index < items) {
-                                        val currentIndex = index
-                                        if (currentIndex < profiles.size) {
-                                            val profile = profiles[currentIndex]
-                                            ProfileAvatarCard(
-                                                profile = profile,
-                                                isEditMode = isEditMode,
-                                                animDelay = currentIndex * 80,
-                                                enabled = interactionEnabled,
-                                                onClick = { tapCenter ->
-                                                    onProfileClick(profile, tapCenter)
-                                                },
-                                            )
-                                        } else {
-                                            AddProfileCard(
-                                                animDelay = currentIndex * 80,
-                                                enabled = interactionEnabled,
-                                                onClick = onAddProfile,
-                                            )
-                                        }
-                                        index++
-                                    } else {
-                                        if (profiles.isNotEmpty()) {
-                                            Spacer(modifier = Modifier.width(150.dp))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                val tiles = buildList {
+                    profiles.forEach { add(ProfileTile.Profile(it)) }
+                    if (profiles.size < MAX_PROFILES) add(ProfileTile.Add)
+                    if (profiles.isNotEmpty()) add(ProfileTile.Edit)
                 }
-
-                Spacer(modifier = Modifier.height(if (isTabletLayout) 28.dp else 48.dp))
-
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer { alpha = manageAlpha.value }
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            if (isEditMode) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            else Color.Transparent,
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = if (isEditMode) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(24.dp),
-                        )
-                        .clickable(enabled = interactionEnabled) { isEditMode = !isEditMode }
-                        .padding(horizontal = 24.dp, vertical = 10.dp),
-                ) {
-                    Text(
-                        text = if (isEditMode) {
-                            stringResource(Res.string.action_done)
-                        } else {
-                            stringResource(Res.string.profile_manage_profiles)
-                        },
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (isEditMode) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                val columns = if (isTabletLayout) tiles.size.coerceAtLeast(1) else 2
+                tiles.chunked(columns).forEachIndexed { rowIndex, rowTiles ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(
+                            if (isTabletLayout) 28.dp else 36.dp,
+                            Alignment.CenterHorizontally,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 18.dp)
+                            .then(
+                                if (rowIndex == 0) {
+                                    Modifier.onGloballyPositioned { coordinates ->
+                                        val top = coordinates.positionInRoot().y - containerTopPx + avatarHalfPx
+                                        if (sheetTopPx != top) sheetTopPx = top
+                                    }
+                                } else {
+                                    Modifier
+                                },
+                            ),
+                    ) {
+                        rowTiles.forEachIndexed { columnIndex, tile ->
+                            val animDelay = (rowIndex * columns + columnIndex) * 80
+                            when (tile) {
+                                is ProfileTile.Profile -> ProfileAvatarCard(
+                                    profile = tile.profile,
+                                    isEditMode = isEditMode,
+                                    animDelay = animDelay,
+                                    enabled = interactionEnabled,
+                                    onClick = { tapCenter -> onProfileClick(tile.profile, tapCenter) },
+                                )
+                                ProfileTile.Add -> ProfileActionTile(
+                                    icon = Icons.Rounded.Add,
+                                    label = stringResource(Res.string.profile_add_short),
+                                    animDelay = animDelay,
+                                    enabled = interactionEnabled,
+                                    onClick = onAddProfile,
+                                )
+                                ProfileTile.Edit -> ProfileActionTile(
+                                    icon = if (isEditMode) Icons.Rounded.Check else Icons.Rounded.Edit,
+                                    label = stringResource(
+                                        if (isEditMode) Res.string.action_done else Res.string.action_edit,
+                                    ),
+                                    animDelay = animDelay,
+                                    enabled = interactionEnabled,
+                                    highlighted = isEditMode,
+                                    onClick = { isEditMode = !isEditMode },
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (onSignInWithAccount != null) {
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(Res.string.settings_account_sign_in_with_account),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
                             .graphicsLayer { alpha = manageAlpha.value }
@@ -385,8 +405,7 @@ fun ProfileSelectionScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(if (isTabletLayout) 0.dp else 32.dp))
-              }
+                Spacer(modifier = Modifier.height(navigationBottom + 32.dp))
             }
         }
 
@@ -418,6 +437,35 @@ fun ProfileSelectionScreen(
     }
 }
 
+internal val ProfileTileAvatarSize = 110.dp
+
+private sealed interface ProfileTile {
+    data class Profile(val profile: NuvioProfile) : ProfileTile
+    data object Add : ProfileTile
+    data object Edit : ProfileTile
+}
+
+private class TileEntrance(
+    val alpha: Animatable<Float, AnimationVector1D>,
+    val scale: Animatable<Float, AnimationVector1D>,
+    val offset: Animatable<Float, AnimationVector1D>,
+)
+
+@Composable
+private fun rememberTileEntrance(animDelay: Int): TileEntrance {
+    val entrance = remember {
+        TileEntrance(Animatable(0f), Animatable(0.85f), Animatable(30f))
+    }
+    LaunchedEffect(Unit) {
+        delay(animDelay.toLong() + 150)
+        launch { entrance.alpha.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
+        launch { entrance.scale.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
+        launch { entrance.offset.animateTo(0f, tween(500, easing = FastOutSlowInEasing)) }
+    }
+    return entrance
+}
+
+/** A profile as a rounded-square picture with its name in bold underneath. */
 @Composable
 private fun ProfileAvatarCard(
     profile: NuvioProfile,
@@ -436,17 +484,7 @@ private fun ProfileAvatarCard(
     val avatarImageUrl = remember(profile.avatarUrl, avatarItem) {
         profileAvatarImageUrl(profile, avatarItem)
     }
-
-    val animAlpha = remember { Animatable(0f) }
-    val animScale = remember { Animatable(0.85f) }
-    val animOffset = remember { Animatable(30f) }
-
-    LaunchedEffect(Unit) {
-        delay(animDelay.toLong() + 150)
-        launch { animAlpha.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
-        launch { animScale.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
-        launch { animOffset.animateTo(0f, tween(500, easing = FastOutSlowInEasing)) }
-    }
+    val entrance = rememberTileEntrance(animDelay)
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -459,14 +497,13 @@ private fun ProfileAvatarCard(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(150.dp)
+            .width(ProfileTileAvatarSize + 16.dp)
             .graphicsLayer {
-                alpha = animAlpha.value
-                scaleX = animScale.value * pressScale
-                scaleY = animScale.value * pressScale
-                translationY = animOffset.value
+                alpha = entrance.alpha.value
+                scaleX = entrance.scale.value * pressScale
+                scaleY = entrance.scale.value * pressScale
+                translationY = entrance.offset.value
             }
-            .clip(RoundedCornerShape(20.dp))
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -482,144 +519,101 @@ private fun ProfileAvatarCard(
             )
             .semantics {
                 role = Role.Button
-            }
-            .padding(8.dp),
+            },
     ) {
         Box(
             modifier = Modifier
-                .size(110.dp)
+                .size(ProfileTileAvatarSize)
                 .onGloballyPositioned { coordinates ->
                     avatarCenterInWindow = coordinates.positionInWindow() + Offset(
                         coordinates.size.width / 2f,
                         coordinates.size.height / 2f,
                     )
-                },
+                }
+                .clip(CinemaProfileAvatarShape)
+                .background(avatarItem?.bgColor?.let { parseHexColor(it) } ?: avatarColor),
             contentAlignment = Alignment.Center,
         ) {
             if (avatarImageUrl != null) {
-                val bgColor = avatarItem?.bgColor?.let { parseHexColor(it) } ?: avatarColor
-                Box(
-                    modifier = Modifier
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .background(bgColor.copy(alpha = 0.2f)),
+                NuvioAsyncImage(
+                    imageUrl = avatarImageUrl,
+                    contentDescription = avatarItem?.displayName ?: profile.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    animateIfPossible = true,
                 )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (avatarItem != null) {
-                            avatarItem.bgColor?.let { parseHexColor(it) } ?: avatarColor
-                        } else {
-                            avatarColor.copy(alpha = 0.15f)
-                        },
-                    )
-                    .then(
-                        if (avatarImageUrl == null) Modifier.border(2.dp, avatarColor.copy(alpha = 0.4f), CircleShape)
-                        else Modifier,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (avatarImageUrl != null) {
-                    NuvioAsyncImage(
-                        imageUrl = avatarImageUrl,
-                        contentDescription = avatarItem?.displayName ?: profile.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        animateIfPossible = true,
-                    )
-                } else if (profile.name.isNotBlank()) {
-                    Text(
-                        text = profile.name.take(1).uppercase(),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp),
-                        color = avatarColor,
-                        fontWeight = FontWeight.Bold,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Rounded.Person,
-                        contentDescription = null,
-                        tint = avatarColor,
-                        modifier = Modifier.size(46.dp),
-                    )
-                }
+            } else if (profile.name.isNotBlank()) {
+                Text(
+                    text = profile.name.take(1).uppercase(),
+                    color = Color.White,
+                    fontSize = 46.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(52.dp),
+                )
             }
 
             if (isEditMode) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .border(2.dp, MaterialTheme.colorScheme.background, CircleShape),
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.55f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-
-            if (profile.pinEnabled && !isEditMode) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(2.dp, MaterialTheme.colorScheme.background, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Lock,
-                        contentDescription = stringResource(Res.string.profile_locked_accessibility),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(14.dp),
+                        tint = Color.White,
+                        modifier = Modifier.size(34.dp),
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        Text(
-            text = profile.name.ifBlank {
-                stringResource(Res.string.profile_label_number, profile.profileIndex)
-            },
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = profile.name.ifBlank {
+                    stringResource(Res.string.profile_label_number, profile.profileIndex)
+                },
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (profile.pinEnabled && !isEditMode) {
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Rounded.Lock,
+                    contentDescription = stringResource(Res.string.profile_locked_accessibility),
+                    tint = CinemaColors.TextSecondary,
+                    modifier = Modifier.size(15.dp),
+                )
+            }
+        }
     }
 }
 
+/** The grey "Add" and "Edit" squares that sit in the grid beside the profiles. */
 @Composable
-private fun AddProfileCard(
+private fun ProfileActionTile(
+    icon: ImageVector,
+    label: String,
     animDelay: Int,
     enabled: Boolean,
     onClick: () -> Unit,
+    highlighted: Boolean = false,
 ) {
-    val animAlpha = remember { Animatable(0f) }
-    val animScale = remember { Animatable(0.85f) }
-    val animOffset = remember { Animatable(30f) }
-
-    LaunchedEffect(Unit) {
-        delay(animDelay.toLong() + 150)
-        launch { animAlpha.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
-        launch { animScale.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
-        launch { animOffset.animateTo(0f, tween(500, easing = FastOutSlowInEasing)) }
-    }
-
+    val entrance = rememberTileEntrance(animDelay)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale = if (isPressed) 0.95f else 1f
@@ -627,55 +621,42 @@ private fun AddProfileCard(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(150.dp)
+            .width(ProfileTileAvatarSize + 16.dp)
             .graphicsLayer {
-                alpha = animAlpha.value
-                scaleX = animScale.value * pressScale
-                scaleY = animScale.value * pressScale
-                translationY = animOffset.value
+                alpha = entrance.alpha.value
+                scaleX = entrance.scale.value * pressScale
+                scaleY = entrance.scale.value * pressScale
+                translationY = entrance.offset.value
             }
-            .clip(RoundedCornerShape(20.dp))
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
                 indication = null,
+                role = Role.Button,
                 onClick = onClick,
-            )
-            .padding(8.dp),
+            ),
     ) {
         Box(
-            modifier = Modifier.size(110.dp),
+            modifier = Modifier
+                .size(ProfileTileAvatarSize)
+                .clip(CinemaProfileAvatarShape)
+                .background(if (highlighted) Color(0xFF5A5A5A) else Color(0xFF474747)),
             contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .border(
-                        2.dp,
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                        CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    modifier = Modifier.size(40.dp),
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(44.dp),
+            )
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = stringResource(Res.string.compose_profile_add_profile),
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
+            text = label,
+            color = Color.White,
+            fontSize = 18.sp,
             textAlign = TextAlign.Center,
+            maxLines = 1,
         )
     }
 }

@@ -23,6 +23,7 @@ import com.nuvio.app.features.membership.resolveProfileBackground
 fun ProfileBackgroundBackdrop(
     profile: NuvioProfile?,
     modifier: Modifier = Modifier,
+    fallback: (@Composable () -> Unit)? = null,
 ) {
     val memberAccess by remember {
         MemberAccessRepository.ensureStarted()
@@ -62,7 +63,9 @@ fun ProfileBackgroundBackdrop(
             null -> null
         }
 
-        if (backgroundModel == null) {
+        if (backgroundModel == null && fallback != null) {
+            fallback()
+        } else if (backgroundModel == null) {
             ProfileMeshBackground(
                 profileColor = profileColor,
                 modifier = Modifier.fillMaxSize(),

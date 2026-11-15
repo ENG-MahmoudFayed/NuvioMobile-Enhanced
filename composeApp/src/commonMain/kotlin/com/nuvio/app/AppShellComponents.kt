@@ -9,6 +9,14 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import com.nuvio.app.core.ui.CinemaProfileAvatarShape
+import com.nuvio.app.core.ui.CinemaRedSpinner
+import com.nuvio.app.features.profiles.ProfileTileAvatarSize
+import com.nuvio.app.features.settings.AppBrandMark
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -507,6 +515,14 @@ private fun TabletTopPillItem(
     }
 }
 
+private val LoadingAvatarSize = 200.dp
+private val LoadingAvatarLift = 70.dp
+private val LoadingSpinnerDrop = 130.dp
+
+/**
+ * The profile-loading screen: the chosen avatar, large and square-cornered, above a red spinner on
+ * black. When a profile was tapped the avatar glides there from the tile the finger left.
+ */
 @Composable
 internal fun AppLoadingContent(
     modifier: Modifier = Modifier,
@@ -515,170 +531,82 @@ internal fun AppLoadingContent(
     exitTowardProfileTab: Boolean = false,
     onExitFinished: () -> Unit = {},
 ) {
-    val tokens = MaterialTheme.nuvio
-    // Netflix-style profile-select entrance, paced over a couple of seconds rather than a quick
-    // snap: the emblem drifts in from oversized-and-lifted, settles with a slow, pronounced
-    // bounce, and a soft "impact" ring pulses outward the moment it lands.
-    val emblemScale = remember { Animatable(1.7f) }
+    val emblemScale = remember { Animatable(0.9f) }
     val emblemAlpha = remember { Animatable(0f) }
     val emblemOffsetX = remember { Animatable(0f) }
-    val emblemOffsetY = remember { Animatable(-36f) }
-    val haloAlpha = remember { Animatable(0f) }
-    val ringScale = remember { Animatable(0.7f) }
-    val ringAlpha = remember { Animatable(0f) }
+    val emblemOffsetY = remember { Animatable(0f) }
+    val spinnerAlpha = remember { Animatable(0f) }
     val density = LocalDensity.current
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
-    val profileTabIconFrame by NativeTabBridge.profileTabIconFrame.collectAsStateWithLifecycle()
-
-    suspend fun CoroutineScope.pulseRing() {
-        ringScale.snapTo(0.7f)
-        ringAlpha.snapTo(0.45f)
-        launch { ringScale.animateTo(1.9f, animationSpec = tween(900, easing = LinearOutSlowInEasing)) }
-        ringAlpha.animateTo(0f, animationSpec = tween(900))
-    }
 
     LaunchedEffect(entryOrigin) {
         if (entryOrigin != null) {
-            // Tap-to-center transition: this emblem *is* the avatar the user just tapped —
-            // already fully on-screen at that spot — so it glides straight into the center
-            // instead of fading in out of nowhere the way the no-origin case below does. Waits
-            // for the container's real size before computing how far that glide needs to travel
-            // (mirrors the math `exitTowardProfileTab` below uses, just in reverse).
+            // Tap-to-center: this emblem *is* the avatar the user just tapped, already on screen
+            // at that spot and at the tile's size, so it glides and grows into place rather than
+            // fading in out of nowhere.
             val size = snapshotFlow { containerSize }.first { it != IntSize.Zero }
-            val startX = entryOrigin.x - size.width / 2f
-            val startY = entryOrigin.y - size.height / 2f
+            val liftPx = with(density) { LoadingAvatarLift.toPx() }
             emblemAlpha.snapTo(1f)
-            emblemScale.snapTo(1f)
-            emblemOffsetX.snapTo(startX)
-            emblemOffsetY.snapTo(startY)
+            emblemScale.snapTo(ProfileTileAvatarSize / LoadingAvatarSize)
+            emblemOffsetX.snapTo(entryOrigin.x - size.width / 2f)
+            emblemOffsetY.snapTo(entryOrigin.y - (size.height / 2f - liftPx))
             val travelDuration = 550
-            launch { emblemOffsetX.animateTo(0f, animationSpec = tween(travelDuration, easing = FastOutSlowInEasing)) }
-            launch { haloAlpha.animateTo(1f, animationSpec = tween(260, delayMillis = travelDuration - 160, easing = FastOutSlowInEasing)) }
-            emblemOffsetY.animateTo(0f, animationSpec = tween(travelDuration, easing = FastOutSlowInEasing))
-            pulseRing()
+            launch { emblemOffsetX.animateTo(0f, tween(travelDuration, easing = FastOutSlowInEasing)) }
+            launch { emblemScale.animateTo(1f, tween(travelDuration, easing = FastOutSlowInEasing)) }
+            launch { spinnerAlpha.animateTo(1f, tween(240, delayMillis = travelDuration - 120)) }
+            emblemOffsetY.animateTo(0f, tween(travelDuration, easing = FastOutSlowInEasing))
         } else {
-            launch { emblemAlpha.animateTo(1f, animationSpec = tween(220, easing = FastOutSlowInEasing)) }
-            launch { haloAlpha.animateTo(1f, animationSpec = tween(420, easing = FastOutSlowInEasing)) }
-            // A snappier spring than before (higher stiffness) so the bounce actually settles
-            // inside the much shorter ~1s minimum display window instead of getting cut off
-            // mid-motion.
-            launch {
-                emblemOffsetY.animateTo(
-                    0f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium,
-                    ),
-                )
-            }
-            launch {
-                emblemScale.animateTo(
-                    1f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium,
-                    ),
-                )
-            }
-            pulseRing()
+            launch { emblemAlpha.animateTo(1f, tween(260, easing = FastOutSlowInEasing)) }
+            launch { spinnerAlpha.animateTo(1f, tween(320, delayMillis = 120)) }
+            emblemScale.animateTo(
+                1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+            )
         }
     }
 
     LaunchedEffect(exitTowardProfileTab) {
         if (!exitTowardProfileTab) return@LaunchedEffect
-        // Prefer the real Profile tab icon's on-screen frame, pushed live from Swift (see
-        // NativeTabBridge.publishProfileTabIconFrame) — lands pixel-perfect on the actual icon.
-        // Falls back to an approximated bottom-right corner if that frame isn't known yet (e.g.
-        // this ran before Swift ever attached the tab bar coordinator).
-        val frame = profileTabIconFrame
-        val targetX: Float
-        val targetY: Float
-        if (frame != null) {
-            val iconCenterXPx = with(density) { (frame.xDp + frame.widthDp / 2f).dp.toPx() }
-            val iconCenterYPx = with(density) { (frame.yDp + frame.heightDp / 2f).dp.toPx() }
-            targetX = iconCenterXPx - containerSize.width / 2f
-            targetY = iconCenterYPx - containerSize.height / 2f
-        } else {
-            val marginPx = with(density) { 24.dp.toPx() }
-            targetX = (containerSize.width / 2f - marginPx).coerceAtLeast(0f)
-            targetY = (containerSize.height / 2f - marginPx).coerceAtLeast(0f)
-        }
-        // The tab bar is already visible underneath by this point, so the emblem stays fully
-        // opaque for almost the whole trip, only dissolving right at the very end — reading as the
-        // icon shrinking down and merging into the real one, not just fading away. Kept brisk
-        // (rather than the ~900ms this used to run) so the overlay doesn't overstay once content
-        // is ready — still long enough at 550ms for that shrink-and-merge motion to read clearly.
-        val travelDuration = 550
-        launch { haloAlpha.animateTo(0f, animationSpec = tween(220)) }
-        launch { ringAlpha.animateTo(0f, animationSpec = tween(200)) }
-        launch {
-            emblemOffsetX.animateTo(targetX, animationSpec = tween(travelDuration, easing = FastOutSlowInEasing))
-        }
-        launch {
-            emblemScale.animateTo(0.22f, animationSpec = tween(travelDuration, easing = FastOutSlowInEasing))
-        }
-        launch {
-            emblemAlpha.animateTo(0f, animationSpec = tween(180, delayMillis = travelDuration - 180))
-        }
-        emblemOffsetY.animateTo(targetY, animationSpec = tween(travelDuration, easing = FastOutSlowInEasing))
+        launch { spinnerAlpha.animateTo(0f, tween(160)) }
+        launch { emblemScale.animateTo(1.06f, tween(260, easing = FastOutSlowInEasing)) }
+        emblemAlpha.animateTo(0f, tween(260, easing = FastOutSlowInEasing))
         onExitFinished()
     }
 
     Box(
-        modifier = modifier.onSizeChanged { containerSize = it },
+        modifier = modifier
+            .background(Color.Black)
+            .onSizeChanged { containerSize = it },
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .graphicsLayer { alpha = haloAlpha.value }
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    tokens.colors.accent.copy(alpha = 0.28f),
-                                    tokens.colors.accent.copy(alpha = 0f),
-                                ),
-                            ),
-                            CircleShape,
-                        ),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(110.dp)
-                        .graphicsLayer {
-                            scaleX = ringScale.value
-                            scaleY = ringScale.value
-                            alpha = ringAlpha.value
-                        }
-                        .border(1.5.dp, tokens.colors.accent, CircleShape),
-                )
-                val emblemModifier = Modifier
-                    .graphicsLayer {
-                        scaleX = emblemScale.value
-                        scaleY = emblemScale.value
-                        alpha = emblemAlpha.value
-                        translationX = emblemOffsetX.value
-                        translationY = emblemOffsetY.value
-                    }
-                if (profile != null) {
-                    AppLoadingProfileAvatar(
-                        profile = profile,
-                        modifier = emblemModifier.size(96.dp),
-                    )
-                } else {
-                    AppBrandWordmark(
-                        contentDescription = stringResource(Res.string.app_brand_name),
-                        modifier = emblemModifier
-                            .width(160.dp)
-                            .height(44.dp),
-                    )
-                }
+        val emblemModifier = Modifier
+            .offset(y = -LoadingAvatarLift)
+            .graphicsLayer {
+                scaleX = emblemScale.value
+                scaleY = emblemScale.value
+                alpha = emblemAlpha.value
+                translationX = emblemOffsetX.value
+                translationY = emblemOffsetY.value
             }
+        if (profile != null) {
+            AppLoadingProfileAvatar(
+                profile = profile,
+                modifier = emblemModifier.size(LoadingAvatarSize),
+            )
+        } else {
+            AppBrandMark(
+                contentDescription = stringResource(Res.string.app_brand_name),
+                modifier = emblemModifier.size(LoadingAvatarSize * 0.6f),
+            )
         }
+        CinemaRedSpinner(
+            modifier = Modifier
+                .offset(y = LoadingSpinnerDrop)
+                .graphicsLayer { alpha = spinnerAlpha.value },
+        )
     }
 }
 
@@ -697,12 +625,13 @@ internal fun AppLoadingProfileAvatar(
     }
     val backgroundColor = avatarItem?.bgColor?.let(::parseHexColor) ?: avatarColor
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
-            .clip(CircleShape)
-            .background(if (avatarImageUrl != null) backgroundColor else backgroundColor.copy(alpha = 0.18f)),
+            .clip(CinemaProfileAvatarShape)
+            .background(backgroundColor),
         contentAlignment = Alignment.Center,
     ) {
+        val initialSize = (maxWidth.value * 0.42f).sp
         when {
             avatarImageUrl != null -> NuvioAsyncImage(
                 imageUrl = avatarImageUrl,
@@ -715,15 +644,15 @@ internal fun AppLoadingProfileAvatar(
             )
             profile.name.isNotBlank() -> Text(
                 text = profile.name.take(1).uppercase(),
-                style = MaterialTheme.typography.headlineLarge,
-                color = avatarColor,
+                color = Color.White,
+                fontSize = initialSize,
                 fontWeight = FontWeight.Bold,
             )
             else -> Icon(
                 imageVector = Icons.Filled.Person,
                 contentDescription = null,
-                tint = avatarColor,
-                modifier = Modifier.size(40.dp),
+                tint = Color.White,
+                modifier = Modifier.fillMaxSize(0.48f),
             )
         }
     }
@@ -735,12 +664,10 @@ internal fun AppLaunchOverlay(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.zIndex(NuvioTokens.Z.dialog),
+        modifier = modifier
+            .zIndex(NuvioTokens.Z.dialog)
+            .background(Color.Black),
     ) {
-        ProfileBackgroundBackdrop(
-            profile = profile,
-            modifier = Modifier.fillMaxSize(),
-        )
         AppLoadingContent(modifier = Modifier.fillMaxSize(), profile = profile)
     }
 }

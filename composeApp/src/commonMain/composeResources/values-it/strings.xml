@@ -2458,4 +2458,6 @@
     <string name="profiles_intro_household">Aggiungi fino a 6 profili per chi guarda con te</string>
     <string name="profiles_intro_next">Avanti</string>
     <string name="profiles_intro_got_it">Ho capito</string>
+    <string name="profile_choose_your_profile">Scegli il tuo profilo</string>
+    <string name="profile_add_short">Aggiungi</string>
 </resources>
