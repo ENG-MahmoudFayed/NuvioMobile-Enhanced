@@ -2935,4 +2935,19 @@
     <string name="my_flowix_recently_watched">Recently Watched</string>
     <string name="my_flowix_my_list_empty">Titles you add to My List appear here.</string>
     <string name="my_flowix_see_all">See All</string>
+    <string name="auth_welcome_wall_title">Movies and shows in just a few taps</string>
+    <string name="auth_welcome_wall_subtitle">Your addons, your library, on every screen</string>
+    <string name="auth_welcome_ready_title">Ready for endless entertainment?</string>
+    <string name="auth_welcome_point_offline">Download to watch offline</string>
+    <string name="auth_welcome_point_progress">Pick up where you left off on any device</string>
+    <string name="auth_welcome_point_profiles">Up to 6 profiles for everyone at home</string>
+    <string name="auth_welcome_caption">Create a free account or sign in</string>
+    <string name="auth_welcome_get_started">Get Started</string>
+    <string name="auth_sign_in_heading">Enter your info to sign in</string>
+    <string name="auth_sign_up_heading">Create your Flowix account</string>
+    <string name="auth_get_help">Get help</string>
+    <string name="auth_new_to_flowix">New to Flowix?</string>
+    <string name="auth_sign_up_now">Sign up now</string>
+    <string name="auth_have_account">Already have an account?</string>
+    <string name="auth_sign_in_now">Sign in</string>
 </resources>

@@ -2437,4 +2437,19 @@
         <item quantity="one">%d titolo</item>
         <item quantity="other">%d titoli</item>
     </plurals>
+    <string name="auth_welcome_wall_title">Film e serie in pochi tocchi</string>
+    <string name="auth_welcome_wall_subtitle">I tuoi addon, la tua libreria, su ogni schermo</string>
+    <string name="auth_welcome_ready_title">Pronto a guardare senza fine?</string>
+    <string name="auth_welcome_point_offline">Scarica e guarda offline</string>
+    <string name="auth_welcome_point_progress">Riprendi da dove eri su ogni dispositivo</string>
+    <string name="auth_welcome_point_profiles">Fino a 6 profili per tutta la casa</string>
+    <string name="auth_welcome_caption">Crea un account gratuito o accedi</string>
+    <string name="auth_welcome_get_started">Inizia</string>
+    <string name="auth_sign_in_heading">Inserisci i tuoi dati per accedere</string>
+    <string name="auth_sign_up_heading">Crea il tuo account Flowix</string>
+    <string name="auth_get_help">Serve aiuto?</string>
+    <string name="auth_new_to_flowix">Nuovo su Flowix?</string>
+    <string name="auth_sign_up_now">Registrati ora</string>
+    <string name="auth_have_account">Hai già un account?</string>
+    <string name="auth_sign_in_now">Accedi</string>
 </resources>

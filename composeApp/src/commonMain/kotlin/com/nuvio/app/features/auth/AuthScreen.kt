@@ -1,18 +1,24 @@
 package com.nuvio.app.features.auth
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,26 +36,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.TextObfuscationMode
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldDecorator
-import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.BasicSecureTextField
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -60,35 +63,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.platform.LocalAutofillManager
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,102 +102,41 @@ import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.DeviceLinkAuthRepository
 import com.nuvio.app.core.auth.DeviceLinkAuthState
 import com.nuvio.app.core.build.AppFeaturePolicy
+import com.nuvio.app.core.ui.CinemaBlockButton
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import com.nuvio.app.features.settings.AppBrandWordmark
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.PI
-import kotlin.math.sin
 import kotlinx.coroutines.launch
 import nuvio.composeapp.generated.resources.Res
-import nuvio.composeapp.generated.resources.compose_auth_already_have_account
+import nuvio.composeapp.generated.resources.action_back
+import nuvio.composeapp.generated.resources.auth_get_help
+import nuvio.composeapp.generated.resources.auth_have_account
+import nuvio.composeapp.generated.resources.auth_new_to_flowix
+import nuvio.composeapp.generated.resources.auth_sign_in_heading
+import nuvio.composeapp.generated.resources.auth_sign_in_now
+import nuvio.composeapp.generated.resources.auth_sign_up_heading
+import nuvio.composeapp.generated.resources.auth_sign_up_now
 import nuvio.composeapp.generated.resources.compose_auth_continue_without_account
 import nuvio.composeapp.generated.resources.compose_auth_create_account
-import nuvio.composeapp.generated.resources.compose_auth_dont_have_account
 import nuvio.composeapp.generated.resources.compose_auth_email
-import nuvio.composeapp.generated.resources.compose_auth_or_separator
 import nuvio.composeapp.generated.resources.compose_auth_password
 import nuvio.composeapp.generated.resources.compose_auth_sign_in
-import nuvio.composeapp.generated.resources.compose_auth_sign_in_subtitle
-import nuvio.composeapp.generated.resources.compose_auth_sign_up
-import nuvio.composeapp.generated.resources.compose_auth_sign_up_subtitle
 import nuvio.composeapp.generated.resources.compose_auth_store_locally
-import nuvio.composeapp.generated.resources.compose_auth_tagline
 import nuvio.composeapp.generated.resources.compose_auth_terms_link
 import nuvio.composeapp.generated.resources.compose_auth_terms_prefix
-import nuvio.composeapp.generated.resources.compose_auth_welcome_back
 import org.jetbrains.compose.resources.stringResource
 
-internal val AuthTextPrimary = Color(0xFFF5F7F8)
-internal val AuthTextSecondary = Color(0xFF969CA3)
-private val AuthTextMuted = Color(0xFF6E7178)
-private val AuthPrimaryButtonBackground = Color(0xFFF5F5F5)
-private val AuthPrimaryButtonText = Color(0xFF111111)
-internal val AuthFieldBackground = Color.White.copy(alpha = 0.04f)
-private val AuthFieldBackgroundMobile = Color.White.copy(alpha = 0.035f)
-internal val AuthFieldBorder = Color.White.copy(alpha = 0.08f)
-private val AuthPaneBackground = Color.White.copy(alpha = 0.022f)
-private val AuthPaneBorder = Color.White.copy(alpha = 0.07f)
-private val AuthDividerColor = Color.White.copy(alpha = 0.10f)
-private val AuthSecondaryButtonBackground = Color.White.copy(alpha = 0.05f)
-private val AuthSecondaryButtonBorder = Color.White.copy(alpha = 0.09f)
+internal val AuthTextPrimary = Color.White
+internal val AuthTextSecondary = CinemaColors.TextSecondary
+private val AuthTextMuted = CinemaColors.TextMuted
+private val AuthPrimaryButtonBackground = Color.White
+private val AuthPrimaryButtonText = Color.Black
+internal val AuthFieldBackground = Color(0xFF1C1718).copy(alpha = 0.92f)
+internal val AuthFieldBorder = CinemaColors.FieldBorder
+private val AuthSecondaryButtonBackground = Color(0xFF3A3A3A).copy(alpha = 0.8f)
+internal val AuthControlShape = RoundedCornerShape(4.dp)
 
-private data class AuthFormMetrics(
-    val fieldHeight: Dp,
-    val fieldHorizontalPadding: Dp,
-    val iconSize: Dp,
-    val passwordIconSize: Dp,
-    val primaryTop: Dp,
-    val primaryHeight: Dp,
-    val toggleTop: Dp,
-    val dividerTop: Dp,
-    val secondaryTop: Dp,
-    val secondaryHeight: Dp,
-    val fieldBackground: Color,
-)
-
-private val MobileAuthFormMetrics = AuthFormMetrics(
-    fieldHeight = 56.dp,
-    fieldHorizontalPadding = 16.dp,
-    iconSize = 19.dp,
-    passwordIconSize = 20.dp,
-    primaryTop = 22.dp,
-    primaryHeight = 54.dp,
-    toggleTop = 18.dp,
-    dividerTop = 28.dp,
-    secondaryTop = 24.dp,
-    secondaryHeight = 54.dp,
-    fieldBackground = AuthFieldBackgroundMobile,
-)
-
-private val LargeAuthFormMetrics = AuthFormMetrics(
-    fieldHeight = 58.dp,
-    fieldHorizontalPadding = 18.dp,
-    iconSize = 20.dp,
-    passwordIconSize = 21.dp,
-    primaryTop = 24.dp,
-    primaryHeight = 56.dp,
-    toggleTop = 18.dp,
-    dividerTop = 30.dp,
-    secondaryTop = 26.dp,
-    secondaryHeight = 56.dp,
-    fieldBackground = AuthFieldBackground,
-)
-
-private fun largeAuthScale(screenWidth: Dp): Float =
-    (screenWidth.value / 1194f).coerceIn(1f, 1.32f)
-
-private fun largeAuthFormMetrics(scale: Float): AuthFormMetrics = LargeAuthFormMetrics.copy(
-    fieldHeight = 58.dp * scale,
-    fieldHorizontalPadding = 18.dp * scale,
-    iconSize = 20.dp * scale,
-    passwordIconSize = 21.dp * scale,
-    primaryTop = 24.dp * scale,
-    primaryHeight = 56.dp * scale,
-    toggleTop = 18.dp * scale,
-    dividerTop = 30.dp * scale,
-    secondaryTop = 26.dp * scale,
-    secondaryHeight = 56.dp * scale,
-)
+private enum class AuthStep { Welcome, SignIn, SignUp }
 
 @Composable
 fun AuthScreen(
@@ -203,7 +147,7 @@ fun AuthScreen(
     val serverConnectionState by ServerConnectionController.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    var isSignUp by rememberSaveable { mutableStateOf(false) }
+    var step by rememberSaveable { mutableStateOf(AuthStep.Welcome) }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
@@ -212,6 +156,7 @@ fun AuthScreen(
     var passwordFieldBounds by remember { mutableStateOf<Rect?>(null) }
     var showServerSheet by rememberSaveable { mutableStateOf(false) }
     var showOfficialServerDialog by rememberSaveable { mutableStateOf(false) }
+    val isSignUp = step == AuthStep.SignUp
 
     fun submitAuth() {
         if (email.isBlank() || password.length < 6 || isLoading) return
@@ -225,10 +170,11 @@ fun AuthScreen(
         }
     }
 
-    fun toggleAuthMode() {
+    fun openStep(target: AuthStep) {
         DeviceLinkAuthRepository.cancel()
-        isSignUp = !isSignUp
         AuthRepository.clearError()
+        focusManager.clearFocus(force = true)
+        step = target
     }
 
     fun startDeviceLink() {
@@ -237,8 +183,6 @@ fun AuthScreen(
         AuthRepository.clearError()
         DeviceLinkAuthRepository.start()
     }
-
-    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     LaunchedEffect(serverConnectionState.activeServer.backendUrl) {
         DeviceLinkAuthRepository.cancel()
@@ -249,6 +193,22 @@ fun AuthScreen(
 
     DisposableEffect(Unit) {
         onDispose(DeviceLinkAuthRepository::cancel)
+    }
+
+    val serverMenu: @Composable () -> Unit = {
+        if (AppFeaturePolicy.customServerConnectionsEnabled) {
+            ServerConnectionMenu(
+                activeServer = serverConnectionState.activeServer,
+                onUseOfficial = {
+                    ServerConnectionController.resetDiscovery()
+                    showOfficialServerDialog = true
+                },
+                onConnectCustom = {
+                    ServerConnectionController.resetDiscovery()
+                    showServerSheet = true
+                },
+            )
+        }
     }
 
     Box(
@@ -269,112 +229,57 @@ fun AuthScreen(
                 }
             },
     ) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            val screenWidth = maxWidth
-            val largeScreen = screenWidth >= 900.dp
-            val compactLargeScreen = screenWidth < 1100.dp
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .authGradientBackground(largeScreen = largeScreen),
-            ) {
-                if (largeScreen) {
-                    val largeScale = largeAuthScale(screenWidth)
-                    val formPaneWidth = (screenWidth * 0.30f).coerceIn(460.dp * largeScale, 720.dp * largeScale)
-                    val brandHorizontalPadding = (screenWidth * 0.055f).coerceIn(56.dp * largeScale, 128.dp * largeScale)
-                    val formHorizontalPadding = (formPaneWidth * 0.14f).coerceIn(48.dp, 96.dp)
-                    val formMetrics = largeAuthFormMetrics(largeScale)
-
-                    AuthLargeLayout(
-                        modifier = Modifier.fillMaxSize(),
-                        isSignUp = isSignUp,
-                        email = email,
-                        password = password,
-                        passwordVisible = passwordVisible,
-                        isLoading = isLoading,
-                        authError = authError,
-                        deviceLinkAuthState = deviceLinkAuthState,
-                        deviceLinkEnabled = serverConnectionState.activeServer.capabilities.tvLogin,
-                        formPaneWidth = if (compactLargeScreen) 460.dp else formPaneWidth,
-                        brandHorizontalPadding = brandHorizontalPadding,
-                        formHorizontalPadding = formHorizontalPadding,
-                        formMetrics = formMetrics,
-                        scale = largeScale,
-                        onEmailChange = {
-                            email = it
-                            AuthRepository.clearError()
-                        },
-                        onPasswordChange = {
-                            password = it
-                            AuthRepository.clearError()
-                        },
-                        onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
-                        onSubmit = ::submitAuth,
-                        onToggleAuthMode = ::toggleAuthMode,
-                        onContinueWithoutAccount = {
-                            focusManager.clearFocus(force = true)
-                            DeviceLinkAuthRepository.cancel()
-                            AuthRepository.signInAnonymously()
-                        },
-                        onStartDeviceLink = ::startDeviceLink,
-                        onCancelDeviceLink = DeviceLinkAuthRepository::cancel,
-                        onEmailBoundsChange = { emailFieldBounds = it },
-                        onPasswordBoundsChange = { passwordFieldBounds = it },
-                    )
+        AnimatedContent(
+            targetState = step == AuthStep.Welcome,
+            transitionSpec = {
+                if (targetState) {
+                    (slideInHorizontally { -it / 4 } + fadeIn()) togetherWith (slideOutHorizontally { it / 4 } + fadeOut())
                 } else {
-                    AuthMobileLayout(
-                        isSignUp = isSignUp,
-                        email = email,
-                        password = password,
-                        passwordVisible = passwordVisible,
-                        isLoading = isLoading,
-                        authError = authError,
-                        deviceLinkAuthState = deviceLinkAuthState,
-                        deviceLinkEnabled = serverConnectionState.activeServer.capabilities.tvLogin,
-                        statusBarTop = statusBarTop,
-                        onEmailChange = {
-                            email = it
-                            AuthRepository.clearError()
-                        },
-                        onPasswordChange = {
-                            password = it
-                            AuthRepository.clearError()
-                        },
-                        onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
-                        onSubmit = ::submitAuth,
-                        onToggleAuthMode = ::toggleAuthMode,
-                        onContinueWithoutAccount = {
-                            focusManager.clearFocus(force = true)
-                            DeviceLinkAuthRepository.cancel()
-                            AuthRepository.signInAnonymously()
-                        },
-                        onStartDeviceLink = ::startDeviceLink,
-                        onCancelDeviceLink = DeviceLinkAuthRepository::cancel,
-                        onEmailBoundsChange = { emailFieldBounds = it },
-                        onPasswordBoundsChange = { passwordFieldBounds = it },
-                    )
+                    (slideInHorizontally { it / 4 } + fadeIn()) togetherWith (slideOutHorizontally { -it / 4 } + fadeOut())
                 }
+            },
+            label = "auth_step",
+        ) { welcome ->
+            if (welcome) {
+                AuthWelcomeScreen(
+                    onGetStarted = { openStep(AuthStep.SignUp) },
+                    onSignIn = { openStep(AuthStep.SignIn) },
+                    menu = serverMenu,
+                )
+            } else {
+                AuthFormScreen(
+                    isSignUp = isSignUp,
+                    email = email,
+                    password = password,
+                    passwordVisible = passwordVisible,
+                    isLoading = isLoading,
+                    authError = authError,
+                    deviceLinkAuthState = deviceLinkAuthState,
+                    deviceLinkEnabled = serverConnectionState.activeServer.capabilities.tvLogin,
+                    onBack = { openStep(AuthStep.Welcome) },
+                    onEmailChange = {
+                        email = it
+                        AuthRepository.clearError()
+                    },
+                    onPasswordChange = {
+                        password = it
+                        AuthRepository.clearError()
+                    },
+                    onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
+                    onSubmit = ::submitAuth,
+                    onToggleAuthMode = { openStep(if (isSignUp) AuthStep.SignIn else AuthStep.SignUp) },
+                    onContinueWithoutAccount = {
+                        focusManager.clearFocus(force = true)
+                        DeviceLinkAuthRepository.cancel()
+                        AuthRepository.signInAnonymously()
+                    },
+                    onStartDeviceLink = ::startDeviceLink,
+                    onCancelDeviceLink = DeviceLinkAuthRepository::cancel,
+                    onEmailBoundsChange = { emailFieldBounds = it },
+                    onPasswordBoundsChange = { passwordFieldBounds = it },
+                    menu = serverMenu,
+                )
             }
-        }
-
-        if (AppFeaturePolicy.customServerConnectionsEnabled) {
-            ServerConnectionMenu(
-                activeServer = serverConnectionState.activeServer,
-                onUseOfficial = {
-                    ServerConnectionController.resetDiscovery()
-                    showOfficialServerDialog = true
-                },
-                onConnectCustom = {
-                    ServerConnectionController.resetDiscovery()
-                    showServerSheet = true
-                },
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 8.dp, top = statusBarTop + 4.dp),
-            )
         }
     }
 
@@ -421,8 +326,12 @@ fun AuthScreen(
     }
 }
 
+/**
+ * "Enter your info to sign in": back arrow and wordmark, a large heading, two fields, one red
+ * action. Device-link sign-in and continuing without an account fold away under "Get help".
+ */
 @Composable
-private fun AuthMobileLayout(
+private fun AuthFormScreen(
     isSignUp: Boolean,
     email: String,
     password: String,
@@ -431,7 +340,7 @@ private fun AuthMobileLayout(
     authError: String?,
     deviceLinkAuthState: DeviceLinkAuthState,
     deviceLinkEnabled: Boolean,
-    statusBarTop: Dp,
+    onBack: () -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onPasswordVisibilityToggle: () -> Unit,
@@ -442,460 +351,248 @@ private fun AuthMobileLayout(
     onCancelDeviceLink: () -> Unit,
     onEmailBoundsChange: (Rect) -> Unit,
     onPasswordBoundsChange: (Rect) -> Unit,
+    menu: @Composable () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 30.dp,
-                top = statusBarTop + 48.dp,
-                end = 30.dp,
-                bottom = 40.dp,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 342.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            AuthBrandLockup(logoHeight = 38.dp)
-
-            Spacer(modifier = Modifier.height(64.dp))
-
-            AuthHeading(
-                isSignUp = isSignUp,
-                headingStyle = MaterialTheme.typography.headlineLarge.copy(
-                    color = AuthTextPrimary,
-                    fontSize = 28.sp,
-                    lineHeight = 31.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-                subtitleStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = AuthTextSecondary,
-                    fontSize = 15.sp,
-                    lineHeight = 21.sp,
-                    fontWeight = FontWeight.Normal,
-                ),
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            AuthForm(
-                isSignUp = isSignUp,
-                email = email,
-                password = password,
-                passwordVisible = passwordVisible,
-                isLoading = isLoading,
-                authError = authError,
-                deviceLinkAuthState = deviceLinkAuthState,
-                deviceLinkEnabled = deviceLinkEnabled,
-                metrics = MobileAuthFormMetrics,
-                onEmailChange = onEmailChange,
-                onPasswordChange = onPasswordChange,
-                onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-                onSubmit = onSubmit,
-                onToggleAuthMode = onToggleAuthMode,
-                onContinueWithoutAccount = onContinueWithoutAccount,
-                onStartDeviceLink = onStartDeviceLink,
-                onCancelDeviceLink = onCancelDeviceLink,
-                onEmailBoundsChange = onEmailBoundsChange,
-                onPasswordBoundsChange = onPasswordBoundsChange,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AuthLargeLayout(
-    modifier: Modifier = Modifier,
-    isSignUp: Boolean,
-    email: String,
-    password: String,
-    passwordVisible: Boolean,
-    isLoading: Boolean,
-    authError: String?,
-    deviceLinkAuthState: DeviceLinkAuthState,
-    deviceLinkEnabled: Boolean,
-    formPaneWidth: Dp,
-    brandHorizontalPadding: Dp,
-    formHorizontalPadding: Dp,
-    formMetrics: AuthFormMetrics,
-    scale: Float,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onPasswordVisibilityToggle: () -> Unit,
-    onSubmit: () -> Unit,
-    onToggleAuthMode: () -> Unit,
-    onContinueWithoutAccount: () -> Unit,
-    onStartDeviceLink: () -> Unit,
-    onCancelDeviceLink: () -> Unit,
-    onEmailBoundsChange: (Rect) -> Unit,
-    onPasswordBoundsChange: (Rect) -> Unit,
-) {
-    Row(
-        modifier = modifier,
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(horizontal = brandHorizontalPadding),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start,
-        ) {
-            AppBrandWordmark(
-                contentDescription = null,
-                modifier = Modifier.height(60.dp * scale),
-            )
-            Spacer(modifier = Modifier.height(32.dp * scale))
-            Text(
-                text = stringResource(Res.string.compose_auth_tagline),
-                modifier = Modifier.widthIn(max = 440.dp * scale),
-                style = MaterialTheme.typography.displayLarge.copy(
-                    color = AuthTextPrimary,
-                    fontSize = (40f * scale).sp,
-                    lineHeight = (45f * scale).sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            )
-            Spacer(modifier = Modifier.height(18.dp * scale))
-            Text(
-                text = stringResource(Res.string.compose_auth_sign_up_subtitle),
-                modifier = Modifier.widthIn(max = 400.dp * scale),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = AuthTextSecondary,
-                    fontSize = (17f * scale).sp,
-                    lineHeight = (26f * scale).sp,
-                    fontWeight = FontWeight.Normal,
-                ),
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .width(formPaneWidth)
-                .fillMaxHeight()
-                .background(AuthPaneBackground)
-                .drawBehind {
-                    drawLine(
-                        color = AuthPaneBorder,
-                        start = Offset(0f, 0f),
-                        end = Offset(0f, size.height),
-                        strokeWidth = 1.dp.toPx(),
-                    )
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = formHorizontalPadding),
-            ) {
-                AuthHeading(
-                    isSignUp = isSignUp,
-                    headingStyle = MaterialTheme.typography.headlineLarge.copy(
-                        color = AuthTextPrimary,
-                        fontSize = (30f * scale).sp,
-                        lineHeight = (33f * scale).sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    subtitleStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = AuthTextSecondary,
-                        fontSize = (15f * scale).sp,
-                        lineHeight = (21f * scale).sp,
-                        fontWeight = FontWeight.Normal,
-                    ),
-                )
-
-                Spacer(modifier = Modifier.height(32.dp * scale))
-
-                AuthForm(
-                    isSignUp = isSignUp,
-                    email = email,
-                    password = password,
-                    passwordVisible = passwordVisible,
-                    isLoading = isLoading,
-                    authError = authError,
-                    deviceLinkAuthState = deviceLinkAuthState,
-                    deviceLinkEnabled = deviceLinkEnabled,
-                    metrics = formMetrics,
-                    scale = scale,
-                    onEmailChange = onEmailChange,
-                    onPasswordChange = onPasswordChange,
-                    onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-                    onSubmit = onSubmit,
-                    onToggleAuthMode = onToggleAuthMode,
-                    onContinueWithoutAccount = onContinueWithoutAccount,
-                    onStartDeviceLink = onStartDeviceLink,
-                    onCancelDeviceLink = onCancelDeviceLink,
-                    onEmailBoundsChange = onEmailBoundsChange,
-                    onPasswordBoundsChange = onPasswordBoundsChange,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AuthBrandLockup(
-    logoHeight: Dp,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        AppBrandWordmark(
-            contentDescription = null,
-            modifier = Modifier.height(logoHeight),
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = stringResource(Res.string.compose_auth_tagline),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = AuthTextSecondary,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.Normal,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun AuthHeading(
-    isSignUp: Boolean,
-    headingStyle: TextStyle,
-    subtitleStyle: TextStyle,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        AnimatedContent(
-            targetState = isSignUp,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "authHeading",
-        ) { signUp ->
-            Text(
-                text = if (signUp) stringResource(Res.string.compose_auth_create_account)
-                else stringResource(Res.string.compose_auth_welcome_back),
-                style = headingStyle,
-                color = AuthTextPrimary,
-            )
-        }
-        AnimatedContent(
-            targetState = isSignUp,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "authSubtitle",
-        ) { signUp ->
-            Text(
-                text = if (signUp) stringResource(Res.string.compose_auth_sign_up_subtitle)
-                else stringResource(Res.string.compose_auth_sign_in_subtitle),
-                style = subtitleStyle,
-                color = AuthTextSecondary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AuthForm(
-    isSignUp: Boolean,
-    email: String,
-    password: String,
-    passwordVisible: Boolean,
-    isLoading: Boolean,
-    authError: String?,
-    deviceLinkAuthState: DeviceLinkAuthState,
-    deviceLinkEnabled: Boolean,
-    metrics: AuthFormMetrics,
-    scale: Float = 1f,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onPasswordVisibilityToggle: () -> Unit,
-    onSubmit: () -> Unit,
-    onToggleAuthMode: () -> Unit,
-    onContinueWithoutAccount: () -> Unit,
-    onStartDeviceLink: () -> Unit,
-    onCancelDeviceLink: () -> Unit,
-    onEmailBoundsChange: (Rect) -> Unit,
-    onPasswordBoundsChange: (Rect) -> Unit,
-) {
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val uriHandler = LocalUriHandler.current
     val autofillManager = LocalAutofillManager.current
     val submitWithAutofillCommit: () -> Unit = {
         autofillManager?.commit()
         onSubmit()
     }
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        AuthTextField(
-            value = email,
-            onValueChange = onEmailChange,
-            placeholder = stringResource(Res.string.compose_auth_email),
-            icon = Icons.Rounded.Email,
-            metrics = metrics,
-            scale = scale,
-            modifier = Modifier.onGloballyPositioned { coordinates ->
-                onEmailBoundsChange(coordinates.boundsInRoot())
-            },
-            autofillContentType = ContentType.EmailAddress + ContentType.Username,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next,
-            ),
-        )
+    var helpExpanded by rememberSaveable { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(if (helpExpanded) 180f else 0f, tween(200), label = "auth_help_chevron")
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        AuthTextField(
-            value = password,
-            onValueChange = onPasswordChange,
-            placeholder = stringResource(Res.string.compose_auth_password),
-            icon = Icons.Rounded.Lock,
-            metrics = metrics,
-            scale = scale,
-            isPassword = true,
-            passwordVisible = passwordVisible,
-            onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-            modifier = Modifier.onGloballyPositioned { coordinates ->
-                onPasswordBoundsChange(coordinates.boundsInRoot())
-            },
-            autofillContentType = if (isSignUp) ContentType.NewPassword else ContentType.Password,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-            ),
-            onImeAction = submitWithAutofillCommit,
-        )
-
-        authError?.let { errorText ->
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = errorText,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = (13f * scale).sp,
-                    lineHeight = (18f * scale).sp,
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to Color(0xFF331316),
+                    0.32f to Color(0xFF170B0C),
+                    0.7f to Color(0xFF060404),
+                    1f to Color.Black,
                 ),
-            )
-        }
-
-        if (isSignUp) {
-            Spacer(modifier = Modifier.height(14.dp * scale))
-            AuthTermsAcknowledgement(
-                scale = scale,
-                onTermsClick = { uriHandler.openUri("https://nuvio.tv/terms") },
-            )
-        }
-
-        Spacer(modifier = Modifier.height(metrics.primaryTop))
-
-        AuthPrimaryButton(
-            text = if (isSignUp) stringResource(Res.string.compose_auth_create_account)
-            else stringResource(Res.string.compose_auth_sign_in),
-            isLoading = isLoading,
-            enabled = !isLoading,
-            height = metrics.primaryHeight,
-            scale = scale,
-            onClick = submitWithAutofillCommit,
-        )
-
-        Spacer(modifier = Modifier.height(metrics.toggleTop))
-
-        AuthModeToggle(
-            isSignUp = isSignUp,
-            scale = scale,
-            onToggleAuthMode = onToggleAuthMode,
-        )
-
-        Spacer(modifier = Modifier.height(metrics.dividerTop))
-
-        AuthDivider(scale = scale)
-
-        Spacer(modifier = Modifier.height(metrics.secondaryTop))
-
-        if (!isSignUp && deviceLinkEnabled) {
-            DeviceLinkAuthSection(
-                state = deviceLinkAuthState,
-                enabled = !isLoading,
-                height = metrics.secondaryHeight,
-                scale = scale,
-                onStart = onStartDeviceLink,
-                onCancel = onCancelDeviceLink,
-            )
-
-            Spacer(modifier = Modifier.height(14.dp * scale))
-        }
-
-        AuthSecondaryButton(
-            text = stringResource(Res.string.compose_auth_continue_without_account),
-            enabled = !isLoading,
-            height = metrics.secondaryHeight,
-            scale = scale,
-            onClick = onContinueWithoutAccount,
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Text(
-            text = stringResource(Res.string.compose_auth_store_locally),
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = AuthTextMuted,
-                fontSize = (13f * scale).sp,
-                lineHeight = (18f * scale).sp,
-                fontWeight = FontWeight.Normal,
             ),
-            textAlign = TextAlign.Center,
-        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(top = statusBarTop, bottom = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(start = 12.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .clickable(role = Role.Button, onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos,
+                        contentDescription = stringResource(Res.string.action_back),
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                Spacer(Modifier.width(20.dp))
+                AppBrandWordmark(modifier = Modifier.height(32.dp))
+                Spacer(Modifier.weight(1f))
+                menu()
+            }
+
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 460.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+            ) {
+                Spacer(Modifier.height(56.dp))
+                AnimatedContent(
+                    targetState = isSignUp,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "auth_heading",
+                ) { signUp ->
+                    Text(
+                        text = stringResource(
+                            if (signUp) Res.string.auth_sign_up_heading else Res.string.auth_sign_in_heading,
+                        ),
+                        color = Color.White,
+                        fontSize = 30.sp,
+                        lineHeight = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
+                Spacer(Modifier.height(26.dp))
+
+                AuthTextField(
+                    value = email,
+                    onValueChange = onEmailChange,
+                    label = stringResource(Res.string.compose_auth_email),
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        onEmailBoundsChange(coordinates.boundsInRoot())
+                    },
+                    autofillContentType = ContentType.EmailAddress + ContentType.Username,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
+                )
+                Spacer(Modifier.height(12.dp))
+                AuthTextField(
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    label = stringResource(Res.string.compose_auth_password),
+                    isPassword = true,
+                    passwordVisible = passwordVisible,
+                    onPasswordVisibilityToggle = onPasswordVisibilityToggle,
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        onPasswordBoundsChange(coordinates.boundsInRoot())
+                    },
+                    autofillContentType = if (isSignUp) ContentType.NewPassword else ContentType.Password,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    onImeAction = submitWithAutofillCommit,
+                )
+
+                authError?.let { errorText ->
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = errorText,
+                        color = Color(0xFFFF6B6B),
+                        fontSize = 14.sp,
+                        lineHeight = 19.sp,
+                    )
+                }
+
+                if (isSignUp) {
+                    Spacer(Modifier.height(14.dp))
+                    AuthTermsAcknowledgement(
+                        onTermsClick = { uriHandler.openUri("https://nuvio.tv/terms") },
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+                CinemaBlockButton(
+                    text = stringResource(
+                        if (isSignUp) Res.string.compose_auth_create_account else Res.string.compose_auth_sign_in,
+                    ),
+                    onClick = submitWithAutofillCommit,
+                    loading = isLoading,
+                    enabled = !isLoading,
+                )
+
+                Spacer(Modifier.height(22.dp))
+                AuthModeToggle(isSignUp = isSignUp, onToggleAuthMode = onToggleAuthMode)
+
+                Spacer(Modifier.height(36.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(role = Role.Button) { helpExpanded = !helpExpanded }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.auth_get_help),
+                        color = Color.White,
+                        fontSize = 19.sp,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(26.dp)
+                            .rotate(chevronRotation),
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = helpExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    Column(Modifier.padding(top = 16.dp)) {
+                        if (!isSignUp && deviceLinkEnabled) {
+                            DeviceLinkAuthSection(
+                                state = deviceLinkAuthState,
+                                enabled = !isLoading,
+                                height = 52.dp,
+                                scale = 1f,
+                                onStart = onStartDeviceLink,
+                                onCancel = onCancelDeviceLink,
+                            )
+                            Spacer(Modifier.height(12.dp))
+                        }
+                        AuthSecondaryButton(
+                            text = stringResource(Res.string.compose_auth_continue_without_account),
+                            enabled = !isLoading,
+                            height = 52.dp,
+                            scale = 1f,
+                            onClick = onContinueWithoutAccount,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = stringResource(Res.string.compose_auth_store_locally),
+                            color = AuthTextMuted,
+                            fontSize = 14.sp,
+                            lineHeight = 19.sp,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun AuthTermsAcknowledgement(
-    scale: Float,
     onTermsClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = stringResource(Res.string.compose_auth_terms_prefix),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = AuthTextSecondary,
-                fontSize = (13f * scale).sp,
-                lineHeight = (18f * scale).sp,
-                fontWeight = FontWeight.Normal,
-            ),
+            color = AuthTextSecondary,
+            fontSize = 15.sp,
+            lineHeight = 21.sp,
         )
-        Spacer(modifier = Modifier.width(4.dp * scale))
+        Spacer(Modifier.width(4.dp))
         Text(
             text = stringResource(Res.string.compose_auth_terms_link),
-            modifier = Modifier.clickable(onClick = onTermsClick),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = AuthTextPrimary,
-                fontSize = (13f * scale).sp,
-                lineHeight = (18f * scale).sp,
-                fontWeight = FontWeight.SemiBold,
-            ),
+            modifier = Modifier.clickable(role = Role.Button, onClick = onTermsClick),
+            color = Color.White,
+            fontSize = 15.sp,
+            lineHeight = 21.sp,
+            textDecoration = TextDecoration.Underline,
         )
     }
 }
 
+/**
+ * Dark field with a hairline grey edge whose label sits inside as a placeholder, then rises to a
+ * small caption above the typed value once the field has focus or text.
+ */
 @Composable
 private fun AuthTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
-    icon: ImageVector,
-    metrics: AuthFormMetrics,
-    scale: Float,
+    label: String,
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
     passwordVisible: Boolean = false,
@@ -904,9 +601,9 @@ private fun AuthTextField(
     onImeAction: (() -> Unit)? = null,
     autofillContentType: ContentType? = null,
 ) {
-    val shape = RoundedCornerShape(14.dp)
     val state = rememberTextFieldState(initialText = value)
     val currentOnValueChange by rememberUpdatedState(onValueChange)
+    var focused by remember { mutableStateOf(false) }
     LaunchedEffect(state) {
         snapshotFlow { state.text.toString() }.collect { text -> currentOnValueChange(text) }
     }
@@ -914,14 +611,16 @@ private fun AuthTextField(
         if (state.text.toString() != value) state.setTextAndPlaceCursorAtEnd(value)
     }
 
+    val raised = focused || state.text.isNotEmpty()
     val textStyle = MaterialTheme.typography.bodyLarge.copy(
-        color = AuthTextPrimary,
-        fontSize = (16f * scale).sp,
-        lineHeight = (22f * scale).sp,
+        color = Color.White,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
         fontWeight = FontWeight.Normal,
     )
     val fieldModifier = Modifier
-        .fillMaxHeight()
+        .fillMaxWidth()
+        .onFocusChanged { focused = it.isFocused }
         .then(
             if (autofillContentType != null) {
                 Modifier.semantics { contentType = autofillContentType }
@@ -931,77 +630,80 @@ private fun AuthTextField(
         )
     val keyboardActionHandler = onImeAction?.let { action -> KeyboardActionHandler { action() } }
     val decorator = TextFieldDecorator { innerTextField ->
-        Box(
+        Column(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.CenterStart,
+            verticalArrangement = Arrangement.Center,
         ) {
-            if (state.text.isEmpty()) {
-                Text(
-                    text = placeholder,
-                    style = textStyle.copy(color = AuthTextMuted),
-                )
+            Text(
+                text = label,
+                color = if (raised) AuthTextSecondary else AuthTextSecondary.copy(alpha = 0.9f),
+                fontSize = if (raised) 13.sp else 18.sp,
+                lineHeight = if (raised) 16.sp else 24.sp,
+            )
+            if (raised) {
+                Spacer(Modifier.height(2.dp))
+                innerTextField()
+            } else {
+                Box(Modifier.height(0.dp)) { innerTextField() }
             }
-            innerTextField()
         }
     }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(metrics.fieldHeight)
-            .background(metrics.fieldBackground, shape)
-            .border(1.dp, AuthFieldBorder, shape)
-            .padding(horizontal = metrics.fieldHorizontalPadding),
+            .height(64.dp)
+            .background(AuthFieldBackground, AuthControlShape)
+            .border(1.dp, if (focused) Color.White else AuthFieldBorder, AuthControlShape)
+            .padding(start = 18.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(metrics.iconSize),
-            tint = AuthTextMuted,
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        if (isPassword) {
-            BasicSecureTextField(
-                state = state,
-                modifier = Modifier.weight(1f).then(fieldModifier),
-                textStyle = textStyle,
-                keyboardOptions = keyboardOptions,
-                onKeyboardAction = keyboardActionHandler,
-                cursorBrush = SolidColor(AuthTextPrimary),
-                decorator = decorator,
-                textObfuscationMode = if (passwordVisible) {
-                    TextObfuscationMode.Visible
-                } else {
-                    TextObfuscationMode.RevealLastTyped
-                },
-            )
-        } else {
-            BasicTextField(
-                state = state,
-                modifier = Modifier.weight(1f).then(fieldModifier),
-                textStyle = textStyle,
-                keyboardOptions = keyboardOptions,
-                onKeyboardAction = keyboardActionHandler,
-                lineLimits = TextFieldLineLimits.SingleLine,
-                cursorBrush = SolidColor(AuthTextPrimary),
-                decorator = decorator,
-            )
+        Box(Modifier.weight(1f).fillMaxHeight()) {
+            if (isPassword) {
+                BasicSecureTextField(
+                    state = state,
+                    modifier = fieldModifier.fillMaxHeight(),
+                    textStyle = textStyle,
+                    keyboardOptions = keyboardOptions,
+                    onKeyboardAction = keyboardActionHandler,
+                    cursorBrush = SolidColor(Color.White),
+                    decorator = decorator,
+                    textObfuscationMode = if (passwordVisible) {
+                        TextObfuscationMode.Visible
+                    } else {
+                        TextObfuscationMode.RevealLastTyped
+                    },
+                )
+            } else {
+                BasicTextField(
+                    state = state,
+                    modifier = fieldModifier.fillMaxHeight(),
+                    textStyle = textStyle,
+                    keyboardOptions = keyboardOptions,
+                    onKeyboardAction = keyboardActionHandler,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    cursorBrush = SolidColor(Color.White),
+                    decorator = decorator,
+                )
+            }
         }
         if (isPassword) {
-            Spacer(modifier = Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .size(30.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .clickable(onClick = onPasswordVisibilityToggle),
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        role = Role.Button,
+                        onClick = onPasswordVisibilityToggle,
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = if (passwordVisible) Icons.Rounded.VisibilityOff
-                    else Icons.Rounded.Visibility,
+                    imageVector = if (passwordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
                     contentDescription = null,
-                    modifier = Modifier.size(metrics.passwordIconSize),
+                    modifier = Modifier.size(22.dp),
                     tint = AuthTextSecondary,
                 )
             }
@@ -1024,7 +726,7 @@ internal fun AuthPrimaryButton(
             .fillMaxWidth()
             .height(height),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = AuthControlShape,
         contentPadding = PaddingValues(0.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = AuthPrimaryButtonBackground,
@@ -1045,11 +747,9 @@ internal fun AuthPrimaryButton(
         } else {
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = (16f * scale).sp,
-                    lineHeight = (22f * scale).sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+                fontSize = (17f * scale).sp,
+                lineHeight = (22f * scale).sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -1058,81 +758,26 @@ internal fun AuthPrimaryButton(
 @Composable
 private fun AuthModeToggle(
     isSignUp: Boolean,
-    scale: Float,
     onToggleAuthMode: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AnimatedContent(
-            targetState = isSignUp,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "authTogglePrompt",
-        ) { signUp ->
-            Text(
-                text = if (signUp) {
-                    stringResource(Res.string.compose_auth_already_have_account).trimEnd()
-                } else {
-                    stringResource(Res.string.compose_auth_dont_have_account).trimEnd()
-                },
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = AuthTextSecondary,
-                    fontSize = (14f * scale).sp,
-                    lineHeight = (20f * scale).sp,
-                    fontWeight = FontWeight.Normal,
-                ),
-            )
-        }
-        Spacer(modifier = Modifier.width(6.dp))
-        AnimatedContent(
-            targetState = isSignUp,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "authToggleAction",
-        ) { signUp ->
-            Text(
-                text = if (signUp) stringResource(Res.string.compose_auth_sign_in)
-                else stringResource(Res.string.compose_auth_sign_up),
-                modifier = Modifier.clickable(onClick = onToggleAuthMode),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = AuthTextPrimary,
-                    fontSize = (14f * scale).sp,
-                    lineHeight = (20f * scale).sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            )
-        }
-    }
-}
-
-@Composable
-private fun AuthDivider(scale: Float) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(AuthDividerColor),
-        )
         Text(
-            text = stringResource(Res.string.compose_auth_or_separator).trim(),
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = AuthTextMuted,
-                fontSize = (13f * scale).sp,
-                lineHeight = (18f * scale).sp,
-                fontWeight = FontWeight.Normal,
-            ),
+            text = stringResource(if (isSignUp) Res.string.auth_have_account else Res.string.auth_new_to_flowix),
+            color = AuthTextSecondary,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
         )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(AuthDividerColor),
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = stringResource(if (isSignUp) Res.string.auth_sign_in_now else Res.string.auth_sign_up_now),
+            modifier = Modifier.clickable(role = Role.Button, onClick = onToggleAuthMode),
+            color = Color.White,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -1151,8 +796,7 @@ internal fun AuthSecondaryButton(
             .fillMaxWidth()
             .height(height),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, AuthSecondaryButtonBorder),
+        shape = AuthControlShape,
         contentPadding = PaddingValues(0.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = AuthSecondaryButtonBackground,
@@ -1163,61 +807,11 @@ internal fun AuthSecondaryButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = (15f * scale).sp,
-                lineHeight = (21f * scale).sp,
-                fontWeight = FontWeight.Medium,
-            ),
+            fontSize = (16f * scale).sp,
+            lineHeight = (21f * scale).sp,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
-    }
-}
-
-private fun Modifier.authGradientBackground(largeScreen: Boolean): Modifier = drawWithCache {
-    val angleDegrees = if (largeScreen) 122.0 else 148.0
-    val angleRadians = angleDegrees * PI / 180.0
-    val directionX = sin(angleRadians).toFloat()
-    val directionY = (-cos(angleRadians)).toFloat()
-    val halfLength = (abs(size.width * directionX) + abs(size.height * directionY)) / 2f
-    val center = Offset(size.width / 2f, size.height / 2f)
-    val start = Offset(
-        x = center.x - directionX * halfLength,
-        y = center.y - directionY * halfLength,
-    )
-    val end = Offset(
-        x = center.x + directionX * halfLength,
-        y = center.y + directionY * halfLength,
-    )
-    val colorStops = if (largeScreen) {
-        arrayOf(
-            0f to Color(0xFF21113B),
-            0.14f to Color(0xFF21113B),
-            0.26f to Color(0xFF1A0E2F),
-            0.36f to Color(0xFF130A23),
-            0.48f to Color(0xFF0A060F),
-            0.60f to Color(0xFF050408),
-            0.70f to Color.Black,
-            1f to Color.Black,
-        )
-    } else {
-        arrayOf(
-            0f to Color(0xFF21113B),
-            0.12f to Color(0xFF21113B),
-            0.24f to Color(0xFF1A0E2F),
-            0.34f to Color(0xFF130A23),
-            0.44f to Color(0xFF0A060F),
-            0.58f to Color(0xFF050408),
-            0.64f to Color.Black,
-            1f to Color.Black,
-        )
-    }
-    val brush = Brush.linearGradient(
-        colorStops = colorStops,
-        start = start,
-        end = end,
-    )
-    onDrawBehind {
-        drawRect(brush = brush)
     }
 }
 

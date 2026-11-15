@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,9 +79,9 @@ internal fun DeviceLinkAuthSection(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(AuthControlShape)
                         .background(AuthFieldBackground)
-                        .border(1.dp, AuthFieldBorder, RoundedCornerShape(16.dp))
+                        .border(1.dp, AuthFieldBorder, AuthControlShape)
                         .padding(horizontal = 18.dp, vertical = 18.dp),
                     contentAlignment = Alignment.Center,
                 ) {
