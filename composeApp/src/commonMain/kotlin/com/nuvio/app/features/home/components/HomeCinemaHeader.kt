@@ -1,5 +1,13 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.platform.LocalDensity
+import com.kyant.backdrop.Backdrop
+import com.nuvio.app.core.ui.CinemaMotion
+import com.nuvio.app.core.ui.glass.liquidGlassBlur
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -103,17 +111,28 @@ internal fun HomeCinemaHeader(
     onDownloadsClick: (() -> Unit)?,
     onNotificationsClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    backdrop: Backdrop? = null,
 ) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var pillsVisible by remember { mutableStateOf(true) }
-    var scrolled by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    // 0 at the very top, 1 once the page has scrolled about 20 points: the bar fades in over it.
+    val barProgress by remember(listState, density) {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                val rampPx = with(density) { 20.dp.toPx() }
+                (listState.firstVisibleItemScrollOffset / rampPx).coerceIn(0f, 1f)
+            }
+        }
+    }
     LaunchedEffect(listState) {
         var previousIndex = listState.firstVisibleItemIndex
         var previousOffset = listState.firstVisibleItemScrollOffset
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
                 val atTop = index == 0 && offset < 24
-                scrolled = !atTop
                 val delta = when {
                     index > previousIndex -> 1
                     index < previousIndex -> -1
@@ -128,14 +147,21 @@ internal fun HomeCinemaHeader(
                 previousOffset = offset
             }
     }
-    val barAlpha by animateFloatAsState(if (scrolled) 1f else 0f, tween(220), label = "home_header_bar")
+    val barAlpha by animateFloatAsState(barProgress, CinemaMotion.micro(), label = "home_header_bar")
 
     var categoriesOpen by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
+    Box(modifier = modifier.fillMaxWidth()) {
+    // The blurred page sits behind the bar and fades in with it; the title stays fully opaque.
+    Box(
+        Modifier
+            .matchParentSize()
+            .liquidGlassBlur(backdrop = backdrop, radius = 24.dp, alphaProvider = { barAlpha }),
+    )
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
@@ -168,8 +194,8 @@ internal fun HomeCinemaHeader(
         )
         AnimatedVisibility(
             visible = pillsVisible,
-            enter = expandVertically(tween(220)) + fadeIn(tween(220)),
-            exit = shrinkVertically(tween(220)) + fadeOut(tween(160)),
+            enter = expandVertically(tween(250)) + slideInVertically(tween(250)) { -it / 2 } + fadeIn(tween(250)),
+            exit = shrinkVertically(tween(250)) + slideOutVertically(tween(250)) { -it / 2 } + fadeOut(tween(200)),
         ) {
             Row(
                 modifier = Modifier
@@ -219,6 +245,7 @@ internal fun HomeCinemaHeader(
                 Spacer(Modifier.size(6.dp))
             }
         }
+    }
     }
 
     if (categoriesOpen) {

@@ -1,5 +1,13 @@
 package com.nuvio.app.features.home
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.nuvio.app.core.ui.DefaultPosterCardWidthDp
+import com.nuvio.app.core.ui.LocalShelfPosterWidthDp
+import com.nuvio.app.core.ui.halfPeekPosterWidthDp
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.MutatePriority
@@ -128,6 +136,7 @@ import kotlinx.coroutines.CancellationException
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -1039,11 +1048,21 @@ fun HomeScreen(
         }
 
         val heroStretchState = rememberHeroStretchState(homeListState)
-        val heroStretchModifier = if (showHeroSlot) {
-            Modifier.nestedScroll(heroStretchState.nestedScrollConnection)
-        } else {
-            Modifier
+        // Pulling down at the top refreshes Home, so the hero no longer stretches on overscroll.
+        val heroStretchModifier = Modifier
+        val headerBackdrop = rememberLayerBackdrop()
+        val shelfPosterWidthDp = remember(maxWidth, posterCardStyle.widthDp, homeSectionPadding) {
+            if (maxWidth < 600.dp && posterCardStyle.widthDp == DefaultPosterCardWidthDp) {
+                halfPeekPosterWidthDp(
+                    availableWidthDp = (maxWidth - homeSectionPadding).value,
+                    preferredWidthDp = posterCardStyle.widthDp,
+                    gapDp = 8,
+                )
+            } else {
+                null
+            }
         }
+        var userRefreshing by remember { mutableStateOf(false) }
 
         var activeHeroArtworkUrl by remember { mutableStateOf<String?>(null) }
         val onActiveHeroArtworkChange: (String?) -> Unit = remember {
@@ -1088,8 +1107,27 @@ fun HomeScreen(
             }?.lazyKey
         }
 
-        DynamicArtworkBackground(artworkUrl = activeHeroArtworkUrl) {
-            CompositionLocalProvider(LocalHomeHeroTopInset provides HomeCinemaHeaderHeight) {
+        DynamicArtworkBackground(
+            artworkUrl = activeHeroArtworkUrl,
+            modifier = Modifier.layerBackdrop(headerBackdrop),
+        ) {
+            CompositionLocalProvider(
+                LocalHomeHeroTopInset provides HomeCinemaHeaderHeight,
+                LocalShelfPosterWidthDp provides shelfPosterWidthDp,
+            ) {
+              PullToRefreshBox(
+                isRefreshing = userRefreshing,
+                onRefresh = {
+                    coroutineScope.launch {
+                        userRefreshing = true
+                        HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
+                        delay(600)
+                        snapshotFlow { HomeRepository.uiState.value.isLoading }.first { loading -> !loading }
+                        userRefreshing = false
+                    }
+                },
+                modifier = Modifier.fillMaxSize(),
+              ) {
                 NuvioScreen(
                     modifier = Modifier.fillMaxSize().then(heroStretchModifier),
                     horizontalPadding = 0.dp,
@@ -1333,11 +1371,13 @@ fun HomeScreen(
                         }
                     }
                 }
+              }
             }
         }
 
         HomeCinemaHeader(
             title = stringResource(Res.string.compose_nav_home),
+            backdrop = headerBackdrop,
             listState = homeListState,
             filter = contentFilter,
             genreOptions = homeGenreOptions,
