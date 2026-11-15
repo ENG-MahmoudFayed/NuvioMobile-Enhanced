@@ -1,5 +1,7 @@
 package com.nuvio.app.features.details.components
 
+import com.nuvio.app.features.details.formatMetaReleaseLineForDetails
+import nuvio.composeapp.generated.resources.details_present
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,7 +43,14 @@ fun DetailAdditionalInfoSection(
             add(stringResource(Res.string.details_status) to localizedMediaStatusLabel(it, isSeriesLike))
         }
         meta.releaseInfo?.let {
-            add(stringResource(Res.string.details_release_info) to formatReleaseDateForDisplay(it))
+            val presentLabel = stringResource(Res.string.details_present)
+            val running = formatMetaReleaseLineForDetails(meta)?.trimEnd()?.endsWith("-") == true
+            val value = if (running) {
+                formatMetaReleaseLineForDetails(meta).orEmpty().trimEnd().removeSuffix("-").trimEnd() + " - " + presentLabel
+            } else {
+                formatReleaseDateForDisplay(it)
+            }
+            add(stringResource(Res.string.details_release_info) to value)
         }
         formatRuntimeForDisplay(meta.runtime)?.let {
             add(stringResource(Res.string.details_runtime) to it)
