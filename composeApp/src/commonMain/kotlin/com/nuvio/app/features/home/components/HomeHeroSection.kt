@@ -1,5 +1,15 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import com.nuvio.app.core.ui.CinemaMotion
+import com.nuvio.app.core.ui.CinemaSize
+import com.nuvio.app.core.ui.CinemaSpace
+import com.nuvio.app.core.ui.CinemaType
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
@@ -190,7 +200,7 @@ private const val BILLBOARD_SCRIM_FRACTION = 0.55f
 internal val HERO_BILLBOARD_CORNER_RADIUS = 16.dp
 private val BILLBOARD_CONTENT_MAX_WIDTH = 420.dp
 private val BillboardButtonShape = RoundedCornerShape(percent = 50)
-private val BillboardButtonHeight = 50.dp
+private val BillboardButtonHeight = CinemaSize.ButtonHeight
 private val BillboardButtonMaxWidth = 190.dp
 private val BillboardSecondaryButtonColor = Color(0xB36D6D6E)
 
@@ -353,6 +363,7 @@ internal fun HomeHeroSection(
             }
             val effectiveArtworkSource = when {
                 !isCardStyle -> HomeHeroArtworkSource.BACKDROP
+                isBillboard -> HomeHeroArtworkSource.BACKDROP
                 heroUsesWideArtwork(maxWidth, viewportHeight, baseLayout.isTablet) ->
                     HomeHeroArtworkSource.BACKDROP
                 else -> HomeHeroArtworkSource.POSTER
@@ -656,13 +667,18 @@ internal fun HomeHeroSection(
                                                     translationX = -offset * heroWidthPx * HERO_CONTENT_PARALLAX
                                                 },
                                             ) {
-                                                BillboardContentBlock(item = layerItem, layout = layout)
+                                                BillboardContentBlock(
+                                                    item = layerItem,
+                                                    // A poster already carries its title; only a
+                                                    // textless backdrop gets the logo on top.
+                                                    showTitle = !layerItem.banner.isNullOrBlank(),
+                                                )
                                             }
                                         }
                                     }
                                 }
                                 if (onPlayClick != null || onMyListClick != null) {
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(CinemaSpace.s12))
                                     CompositionLocalProvider(LocalLiquidGlassBackdrop provides billboardBackdrop) {
                                         BillboardActionButtons(
                                             item = currentItem,
@@ -1001,7 +1017,7 @@ private fun HeroContentBlock(
 @Composable
 private fun BillboardContentBlock(
     item: MetaPreview,
-    layout: HomeHeroLayout,
+    showTitle: Boolean,
 ) {
     var logoLoadError by remember(item.type, item.id, item.logo) {
         mutableStateOf(false)
@@ -1027,23 +1043,22 @@ private fun BillboardContentBlock(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (logoUrl != null && !logoLoadError) {
+        if (showTitle && logoUrl != null && !logoLoadError) {
             AsyncImage(
                 model = logoUrl,
                 contentDescription = item.name,
                 modifier = Modifier
-                    .fillMaxWidth(layout.logoWidthFraction)
-                    .aspectRatio(2.6f),
+                    .fillMaxWidth(0.7f)
+                    .height(80.dp),
                 contentScale = ContentScale.Fit,
+                alignment = Alignment.BottomCenter,
                 onError = { logoLoadError = true },
             )
-        } else {
+        } else if (showTitle) {
             Text(
                 text = item.name,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.displaySmall,
-                color = Color.White,
-                fontWeight = FontWeight.Black,
+                style = CinemaType.screenTitle,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -1055,7 +1070,7 @@ private fun BillboardContentBlock(
             else -> null
         }
         if (genres.isNotEmpty() || typeLabel != null) {
-            Spacer(modifier = Modifier.height(12.dp))
+            if (showTitle) Spacer(modifier = Modifier.height(CinemaSpace.s12))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1167,17 +1182,26 @@ private fun BillboardButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = contentColor,
-            modifier = Modifier.size(22.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
+        // The My List icon turns from + into a tick with a quick scale and fade.
+        AnimatedContent(
+            targetState = icon,
+            transitionSpec = {
+                (fadeIn(CinemaMotion.micro()) + scaleIn(CinemaMotion.spring(), initialScale = 0.6f))
+                    .togetherWith(fadeOut(CinemaMotion.micro()) + scaleOut(CinemaMotion.micro(), targetScale = 0.6f))
+            },
+            label = "billboard_button_icon",
+        ) { currentIcon ->
+            Icon(
+                imageVector = currentIcon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(CinemaSize.Icon),
+            )
+        }
+        Spacer(modifier = Modifier.width(CinemaSpace.s8))
         Text(
             text = label,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+            style = CinemaType.button,
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
