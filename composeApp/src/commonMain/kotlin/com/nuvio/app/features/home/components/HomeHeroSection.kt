@@ -1,5 +1,7 @@
 package com.nuvio.app.features.home.components
 
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -1110,6 +1112,7 @@ private fun BillboardActionButtons(
     val isSaved = remember(libraryUiState, item.id, item.type) {
         LibraryRepository.isSaved(item.id, item.type)
     }
+    val haptics = LocalHapticFeedback.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1122,7 +1125,10 @@ private fun BillboardActionButtons(
                 containerColor = Color.White,
                 contentColor = Color.Black,
                 useGlass = false,
-                onClick = { onPlayClick(item) },
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onPlayClick(item)
+                },
                 modifier = Modifier
                     .weight(1f)
                     .widthIn(max = BillboardButtonMaxWidth),
@@ -1135,7 +1141,10 @@ private fun BillboardActionButtons(
                 containerColor = BillboardSecondaryButtonColor,
                 contentColor = Color.White,
                 useGlass = true,
-                onClick = { onMyListClick(item) },
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onMyListClick(item)
+                },
                 modifier = Modifier
                     .weight(1f)
                     .widthIn(max = BillboardButtonMaxWidth),

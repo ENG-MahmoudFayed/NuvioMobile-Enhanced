@@ -1,5 +1,7 @@
 package com.nuvio.app.features.profiles
 
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.nuvio.app.core.ui.CinemaMotion
 import com.nuvio.app.core.ui.rememberReduceMotion
 import androidx.compose.animation.core.Animatable
@@ -501,6 +503,7 @@ private fun ProfileAvatarCard(
     // Kept up to date on every layout pass so the tap handler below can hand back exactly where
     // on screen this avatar sits — that's where AppLoadingContent glides its emblem in from.
     var avatarCenterInWindow by remember { mutableStateOf(Offset.Zero) }
+    val haptics = LocalHapticFeedback.current
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -523,7 +526,10 @@ private fun ProfileAvatarCard(
                         Res.string.profile_select_accessibility
                     },
                 ),
-                onClick = { onClick(avatarCenterInWindow) },
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onClick(avatarCenterInWindow)
+                },
             )
             .semantics {
                 role = Role.Button

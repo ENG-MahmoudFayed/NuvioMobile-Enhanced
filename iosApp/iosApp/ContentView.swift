@@ -1755,6 +1755,7 @@ struct NativeNavContentView: View {
                     return
                 }
                 if appCoordinator.isAppReady || newTab == .home {
+                    UISelectionFeedbackGenerator().selectionChanged()
                     appCoordinator.selectedTab = newTab
                 }
             }

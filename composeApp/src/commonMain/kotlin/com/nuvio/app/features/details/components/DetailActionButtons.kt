@@ -737,6 +737,7 @@ private fun PlayButton(
     onPlayLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = LocalHapticFeedback.current
         Surface(
             modifier = modifier
                 .height(buttonHeight)
@@ -755,6 +756,7 @@ private fun PlayButton(
                     .combinedClickable(
                         enabled = playEnabled,
                         onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                             onPlayClick()
                         },
                         onLongClick = onPlayLongClick,
