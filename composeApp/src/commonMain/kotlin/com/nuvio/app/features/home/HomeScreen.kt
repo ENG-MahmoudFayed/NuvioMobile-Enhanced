@@ -1052,6 +1052,8 @@ fun HomeScreen(
         // Pulling down at the top refreshes Home, so the hero no longer stretches on overscroll.
         val heroStretchModifier = Modifier
         val headerBackdrop = rememberLayerBackdrop()
+        // Read here, outside the refresh box, whose own scope hides the outer constraints.
+        val homeViewportHeight = maxHeight
         val shelfPosterWidthDp = remember(maxWidth, posterCardStyle.widthDp, homeSectionPadding) {
             if (maxWidth < 600.dp && posterCardStyle.widthDp == DefaultPosterCardWidthDp) {
                 halfPeekPosterWidthDp(
@@ -1150,7 +1152,7 @@ fun HomeScreen(
                                     when {
                                         isLoading -> HomeSkeletonHero(
                                             modifier = Modifier,
-                                            viewportHeight = maxHeight,
+                                            viewportHeight = homeViewportHeight,
                                             mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
                                             heroStyle = homeSettingsUiState.heroStyle,
                                         )
@@ -1158,7 +1160,7 @@ fun HomeScreen(
                                         homeUiState.heroItems.isNotEmpty() -> HomeHeroSection(
                                             items = filteredHeroItems,
                                             modifier = Modifier,
-                                            viewportHeight = maxHeight,
+                                            viewportHeight = homeViewportHeight,
                                             mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
                                             heroStyle = homeSettingsUiState.heroStyle,
                                             listState = homeListState,
@@ -1180,7 +1182,7 @@ fun HomeScreen(
 
                                         else -> HomeHeroReservedSpace(
                                             modifier = Modifier,
-                                            viewportHeight = maxHeight,
+                                            viewportHeight = homeViewportHeight,
                                             mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
                                             heroStyle = homeSettingsUiState.heroStyle,
                                         )
