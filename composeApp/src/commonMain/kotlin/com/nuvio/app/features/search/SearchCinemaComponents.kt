@@ -1,5 +1,6 @@
 package com.nuvio.app.features.search
 
+import com.nuvio.app.core.ui.rememberCinemaShimmerBrush
 import com.nuvio.app.core.ui.CinemaSize
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -235,6 +236,7 @@ internal fun SearchRecommendationRow(
 /** Grey placeholder in the shape of a recommendation row, while the catalogue loads. */
 @Composable
 internal fun SearchRecommendationSkeleton(modifier: Modifier = Modifier) {
+    val shimmer = rememberCinemaShimmerBrush()
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -245,7 +247,7 @@ internal fun SearchRecommendationSkeleton(modifier: Modifier = Modifier) {
                 .width(150.dp)
                 .aspectRatio(16f / 9f)
                 .clip(RoundedCornerShape(4.dp))
-                .background(Color.White.copy(alpha = 0.06f)),
+                .background(shimmer),
         )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
@@ -253,14 +255,14 @@ internal fun SearchRecommendationSkeleton(modifier: Modifier = Modifier) {
                     .fillMaxWidth(0.8f)
                     .height(14.dp)
                     .clip(RoundedCornerShape(7.dp))
-                    .background(Color.White.copy(alpha = 0.06f)),
+                    .background(shimmer),
             )
             Box(
                 Modifier
                     .fillMaxWidth(0.5f)
                     .height(14.dp)
                     .clip(RoundedCornerShape(7.dp))
-                    .background(Color.White.copy(alpha = 0.06f)),
+                    .background(shimmer),
             )
         }
     }

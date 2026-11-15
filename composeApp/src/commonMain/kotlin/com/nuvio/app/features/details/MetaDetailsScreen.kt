@@ -1,5 +1,10 @@
 package com.nuvio.app.features.details
 
+import com.nuvio.app.core.ui.CinemaSkeletonBlock
+import com.nuvio.app.core.ui.CinemaShapes
+import com.nuvio.app.core.ui.CinemaSize
+import com.nuvio.app.core.ui.CinemaSpace
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -455,9 +460,7 @@ fun MetaDetailsScreen(
         ) {
             when {
             displayedMeta == null && uiState.isLoading -> {
-                NuvioLoadingIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                )
+                DetailLoadingSkeleton(modifier = Modifier.fillMaxSize())
             }
 
             displayedMeta == null && uiState.errorMessage != null -> {
@@ -2773,4 +2776,32 @@ private fun MetaDetails.shareLine(): String {
     val heading = if (year != null) "$name ($year)" else name
     val imdb = (imdbId ?: id.takeIf { it.startsWith("tt") })?.let { "https://www.imdb.com/title/$it/" }
     return listOfNotNull(heading, imdb).joinToString(separator = "\n")
+}
+
+/** Shimmering stand-in for the details page while it loads: picture, title, buttons, text. */
+@Composable
+private fun DetailLoadingSkeleton(modifier: Modifier = Modifier) {
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CinemaSpace.s12)) {
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            CinemaSkeletonBlock(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(maxWidth * (9f / 16f) + statusBarTop),
+                shape = RectangleShape,
+            )
+        }
+        Column(
+            modifier = Modifier.padding(horizontal = CinemaSpace.PageMargin),
+            verticalArrangement = Arrangement.spacedBy(CinemaSpace.s12),
+        ) {
+            CinemaSkeletonBlock(Modifier.fillMaxWidth(0.6f).height(28.dp))
+            CinemaSkeletonBlock(Modifier.fillMaxWidth(0.4f).height(16.dp))
+            CinemaSkeletonBlock(Modifier.fillMaxWidth().height(CinemaSize.ButtonHeight), shape = CinemaShapes.Pill)
+            CinemaSkeletonBlock(Modifier.fillMaxWidth().height(CinemaSize.ButtonHeight), shape = CinemaShapes.Pill)
+            repeat(3) {
+                CinemaSkeletonBlock(Modifier.fillMaxWidth().height(14.dp))
+            }
+        }
+    }
 }
