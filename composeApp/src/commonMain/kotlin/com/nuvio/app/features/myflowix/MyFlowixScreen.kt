@@ -1,5 +1,21 @@
 package com.nuvio.app.features.myflowix
 
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import com.nuvio.app.AppLoadingProfileAvatar
+import com.nuvio.app.core.auth.AuthRepository
+import com.nuvio.app.core.ui.CinemaColors
+import com.nuvio.app.core.ui.CinemaIconAction
+import com.nuvio.app.core.ui.CinemaProfileAvatarShape
+import com.nuvio.app.core.ui.CinemaTopBar
+import com.nuvio.app.core.ui.NuvioStatusModal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -102,6 +118,7 @@ internal fun MyFlowixScreen(
     onOpenAccount: () -> Unit,
     onOpenLibrary: () -> Unit,
     onDownloadsClick: () -> Unit,
+    onNotificationsClick: (() -> Unit)? = null,
     onSwitchProfile: (() -> Unit)? = null,
     onEditProfile: (() -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
@@ -148,6 +165,8 @@ internal fun MyFlowixScreen(
     }
 
     var showProfileMenu by rememberSaveable { mutableStateOf(false) }
+    var showSignOutConfirm by rememberSaveable { mutableStateOf(false) }
+    val signOutScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     LaunchedEffect(scrollToTopRequests) {
         scrollToTopRequests.collect { listState.animateScrollToItem(0) }
@@ -161,39 +180,42 @@ internal fun MyFlowixScreen(
         item(key = "my_flowix_header") {
             MyFlowixHeader(
                 profile = profileState.activeProfile,
-                avatars = avatars,
                 onProfileClick = { showProfileMenu = true },
                 onDownloadsClick = onDownloadsClick,
+                onNotificationsClick = onNotificationsClick,
             )
         }
         item(key = "my_flowix_downloads") {
             Row(
                 modifier = Modifier
                     .padding(horizontal = MyFlowixHorizontalPadding)
+                    .padding(top = 8.dp)
                     .fillMaxWidth()
                     .clip(MyFlowixRowShape)
-                    .background(tokens.colors.surface)
+                    .background(CinemaColors.Card)
+                    .border(1.dp, CinemaColors.CardBorder, MyFlowixRowShape)
                     .clickable(role = Role.Button, onClick = onDownloadsClick)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Download,
+                    imageVector = Icons.Outlined.FileDownload,
                     contentDescription = null,
-                    tint = tokens.colors.textPrimary,
-                    modifier = Modifier.size(24.dp),
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp),
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = stringResource(Res.string.compose_settings_root_downloads_title),
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 21.sp,
                         fontWeight = FontWeight.Bold,
-                        color = tokens.colors.textPrimary,
+                        color = Color.White,
                     )
                     Text(
                         text = stringResource(Res.string.my_flowix_downloads_description),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.colors.textSecondary,
+                        fontSize = 17.sp,
+                        lineHeight = 22.sp,
+                        color = CinemaColors.TextSecondary,
                     )
                 }
             }
@@ -206,9 +228,21 @@ internal fun MyFlowixScreen(
                     dataSourceKey = watchProgressUiState.source,
                     useEpisodeThumbnails = continueWatchingPreferences.useEpisodeThumbnails,
                     blurNextUp = continueWatchingPreferences.blurNextUp,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 12.dp),
                     onItemClick = onContinueWatchingClick,
                     onItemLongPress = onContinueWatchingLongPress,
+                    onItemInfoClick = onPosterClick?.let { openDetails ->
+                        { item ->
+                            openDetails(
+                                MetaPreview(
+                                    id = item.parentMetaId,
+                                    type = item.parentMetaType,
+                                    name = item.title,
+                                    poster = item.poster,
+                                ),
+                            )
+                        }
+                    },
                 )
             }
         }
@@ -216,14 +250,19 @@ internal fun MyFlowixScreen(
             if (myList.isEmpty()) {
                 MyListEmptyRow(onClick = onOpenLibrary)
             } else {
+                Column(
+                    modifier = Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    SeeAllHeader(
+                        title = stringResource(Res.string.home_hero_my_list),
+                        onSeeAll = onOpenLibrary,
+                    )
                 NuvioShelfSection(
-                    title = stringResource(Res.string.home_hero_my_list),
+                    title = "",
                     entries = myList,
-                    modifier = Modifier.padding(top = 4.dp),
-                    headerHorizontalPadding = MyFlowixHorizontalPadding,
                     rowContentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
                     itemSpacing = 8.dp,
-                    onViewAllClick = onOpenLibrary,
                     key = { item -> item.stableKey() },
                 ) { item ->
                     HomePosterCard(
@@ -231,6 +270,7 @@ internal fun MyFlowixScreen(
                         onClick = onPosterClick?.let { { it(item) } },
                         onLongClick = onPosterLongClick?.let { { it(item) } },
                     )
+                }
                 }
             }
         }
@@ -263,62 +303,103 @@ internal fun MyFlowixScreen(
             onOpenAccount = onOpenAccount,
             onSwitchProfile = onSwitchProfile,
             onEditProfile = onEditProfile,
+            onSignOut = { showSignOutConfirm = true },
         )
     }
+
+    NuvioStatusModal(
+        title = stringResource(Res.string.settings_account_sign_out_confirm_title),
+        message = stringResource(Res.string.settings_account_sign_out_confirm_message),
+        isVisible = showSignOutConfirm,
+        confirmText = stringResource(Res.string.settings_account_sign_out),
+        dismissText = stringResource(Res.string.action_cancel),
+        onConfirm = {
+            showSignOutConfirm = false
+            signOutScope.launch { AuthRepository.signOut() }
+        },
+        onDismiss = { showSignOutConfirm = false },
+    )
 }
 
 @Composable
 private fun MyFlowixHeader(
     profile: NuvioProfile?,
-    avatars: List<AvatarCatalogItem>,
     onProfileClick: () -> Unit,
     onDownloadsClick: () -> Unit,
+    onNotificationsClick: (() -> Unit)?,
 ) {
-    val tokens = MaterialTheme.nuvio
+    CinemaTopBar(
+        title = profile.displayName(),
+        modifier = Modifier.padding(top = 4.dp),
+        leading = {
+            if (profile != null) {
+                AppLoadingProfileAvatar(profile = profile, modifier = Modifier.size(40.dp))
+            }
+        },
+        titleTrailing = {
+            Icon(
+                imageVector = Icons.Rounded.ArrowDropDown,
+                contentDescription = stringResource(Res.string.my_flowix_profiles),
+                tint = Color.White,
+                modifier = Modifier.size(34.dp),
+            )
+        },
+        onTitleClick = onProfileClick,
+        actions = {
+            CinemaIconAction(
+                icon = Icons.Outlined.FileDownload,
+                contentDescription = stringResource(Res.string.compose_settings_root_downloads_title),
+                onClick = onDownloadsClick,
+            )
+            if (onNotificationsClick != null) {
+                CinemaIconAction(
+                    icon = Icons.Outlined.Notifications,
+                    contentDescription = stringResource(Res.string.home_action_notifications),
+                    onClick = onNotificationsClick,
+                )
+            }
+        },
+    )
+}
+
+/** A row title with "See All ›" at the far end, as above My List. */
+@Composable
+private fun SeeAllHeader(
+    title: String,
+    onSeeAll: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = MyFlowixHorizontalPadding, end = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(start = MyFlowixHorizontalPadding, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         Row(
             modifier = Modifier
-                .weight(1f, fill = false)
-                .heightIn(min = 48.dp)
+                .heightIn(min = 44.dp)
                 .clip(MyFlowixRowShape)
-                .clickable(role = Role.Button, onClick = onProfileClick),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                .clickable(role = Role.Button, onClick = onSeeAll)
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ActiveProfileMiniAvatar(profile = profile, avatars = avatars, selected = false, size = 32)
             Text(
-                text = profile.displayName(),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = tokens.colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+                text = stringResource(Res.string.my_flowix_see_all),
+                fontSize = 18.sp,
+                color = Color.White,
             )
             Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = stringResource(Res.string.my_flowix_profiles),
-                tint = tokens.colors.textPrimary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(tokens.shapes.avatar)
-                .clickable(role = Role.Button, onClick = onDownloadsClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Download,
-                contentDescription = stringResource(Res.string.compose_settings_root_downloads_title),
-                tint = tokens.colors.textPrimary,
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.White,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -331,42 +412,18 @@ private fun MyListEmptyRow(onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = MyFlowixHorizontalPadding)
-            .padding(top = 4.dp),
+            .padding(top = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 44.dp)
-                .clickable(role = Role.Button, onClick = onClick),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.home_hero_my_list),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = tokens.colors.textPrimary,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(Res.string.my_flowix_see_all),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = tokens.colors.textPrimary,
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = tokens.colors.textPrimary,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-        }
+        SeeAllHeader(
+            title = stringResource(Res.string.home_hero_my_list),
+            onSeeAll = onClick,
+        )
         Text(
             text = stringResource(Res.string.my_flowix_my_list_empty),
-            style = MaterialTheme.typography.bodyMedium,
-            color = tokens.colors.textSecondary,
+            modifier = Modifier.padding(horizontal = MyFlowixHorizontalPadding),
+            fontSize = 16.sp,
+            color = CinemaColors.TextSecondary,
         )
     }
 }
@@ -386,9 +443,9 @@ private fun RecentlyWatchedRow(
         Text(
             text = stringResource(Res.string.my_flowix_recently_watched),
             modifier = Modifier.padding(horizontal = MyFlowixHorizontalPadding),
-            style = MaterialTheme.typography.titleLarge,
+            fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
-            color = tokens.colors.textPrimary,
+            color = Color.White,
         )
         LazyRow(
             contentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
@@ -408,10 +465,10 @@ private fun RecentlyWatchedRow(
                 }
                 Column(
                     modifier = Modifier
-                        .width(220.dp)
+                        .width(264.dp)
                         .pressScale(interactionSource)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(tokens.colors.surface)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(CinemaColors.Sheet)
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null,
@@ -433,9 +490,9 @@ private fun RecentlyWatchedRow(
                         text = label,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.colors.textPrimary,
+                            .padding(horizontal = 12.dp, vertical = 18.dp),
+                        fontSize = 17.sp,
+                        color = Color.White,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -457,6 +514,7 @@ private fun MyFlowixProfileMenu(
     onOpenAccount: () -> Unit,
     onSwitchProfile: (() -> Unit)?,
     onEditProfile: (() -> Unit)?,
+    onSignOut: () -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -472,6 +530,7 @@ private fun MyFlowixProfileMenu(
     NuvioModalBottomSheet(
         onDismissRequest = { dismissThen() },
         sheetState = sheetState,
+        containerColor = CinemaColors.Sheet,
         showDragHandle = false,
     ) {
         Column(
@@ -487,9 +546,9 @@ private fun MyFlowixProfileMenu(
                 Text(
                     text = stringResource(Res.string.my_flowix_profiles),
                     modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = tokens.colors.textPrimary,
+                    color = Color.White,
                 )
                 MenuCircleButton(
                     icon = Icons.Rounded.Close,
@@ -502,21 +561,24 @@ private fun MyFlowixProfileMenu(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(tokens.colors.surfaceCard)
-                    .padding(vertical = 20.dp),
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color(0xFF2E2E2E))
+                    .padding(vertical = 24.dp),
             ) {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    ActiveProfileMiniAvatar(profile = activeProfile, avatars = avatars, selected = false, size = 96)
+                    if (activeProfile != null) {
+                        AppLoadingProfileAvatar(profile = activeProfile, modifier = Modifier.size(116.dp))
+                    }
                     Text(
                         text = activeProfile.displayName(),
-                        style = MaterialTheme.typography.headlineLarge,
+                        fontSize = 38.sp,
+                        lineHeight = 44.sp,
                         fontWeight = FontWeight.Bold,
-                        color = tokens.colors.textPrimary,
+                        color = Color.White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -538,7 +600,7 @@ private fun MyFlowixProfileMenu(
                 ) {
                     otherProfiles.take(3).forEach { profile ->
                         ProfileChoice(label = profile.displayName(), onClick = { dismissThen(onSwitchProfile) }) {
-                            ActiveProfileMiniAvatar(profile = profile, avatars = avatars, selected = false, size = 64)
+                            AppLoadingProfileAvatar(profile = profile, modifier = Modifier.size(72.dp))
                         }
                     }
                     ProfileChoice(
@@ -547,12 +609,12 @@ private fun MyFlowixProfileMenu(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(tokens.colors.surfaceCard),
+                                .size(72.dp)
+                                .clip(CinemaProfileAvatarShape)
+                                .background(Color(0xFF3A3A3A)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Rounded.Add, null, tint = tokens.colors.textPrimary, modifier = Modifier.size(28.dp))
+                            Icon(Icons.Rounded.Add, null, tint = Color.White, modifier = Modifier.size(34.dp))
                         }
                     }
                 }
@@ -561,9 +623,9 @@ private fun MyFlowixProfileMenu(
                         .padding(vertical = 12.dp)
                         .heightIn(min = 44.dp)
                         .clip(tokens.shapes.chip)
-                        .background(tokens.colors.surfaceCard)
+                        .background(Color(0xFF474747))
                         .clickable(role = Role.Button) { dismissThen(onSwitchProfile) }
-                        .padding(horizontal = 18.dp),
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -576,14 +638,19 @@ private fun MyFlowixProfileMenu(
             }
 
             MenuRow(
-                icon = Icons.Rounded.Settings,
+                icon = Icons.Outlined.Settings,
                 label = stringResource(Res.string.my_flowix_app_settings),
                 onClick = { dismissThen(onOpenAppSettings) },
             )
             MenuRow(
-                icon = Icons.Rounded.Person,
+                icon = Icons.Outlined.Person,
                 label = stringResource(Res.string.settings_account),
                 onClick = { dismissThen(onOpenAccount) },
+            )
+            MenuRow(
+                icon = Icons.AutoMirrored.Outlined.ExitToApp,
+                label = stringResource(Res.string.settings_account_sign_out),
+                onClick = { dismissThen(onSignOut) },
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -634,21 +701,21 @@ private fun MenuRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(tokens.colors.surfaceCard)
+            .heightIn(min = 64.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(CinemaColors.SheetRow)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = tokens.colors.textPrimary, modifier = Modifier.size(24.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
         Text(
             text = label,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 19.sp,
             fontWeight = FontWeight.Bold,
-            color = tokens.colors.textPrimary,
+            color = Color.White,
         )
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,

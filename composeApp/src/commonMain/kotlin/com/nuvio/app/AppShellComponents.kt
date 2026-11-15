@@ -334,6 +334,7 @@ private fun MyFlowixTab(
                 onOpenAccount = actions.onAccountSettingsClick,
                 onOpenLibrary = { paneName = MyFlowixPane.Library.name },
                 onDownloadsClick = actions.onDownloadsClick,
+                onNotificationsClick = actions.onWhatsNewSettingsClick,
                 onSwitchProfile = actions.onSwitchProfile,
                 onEditProfile = actions.onEditProfile,
                 onPosterClick = actions.onPosterClick,
