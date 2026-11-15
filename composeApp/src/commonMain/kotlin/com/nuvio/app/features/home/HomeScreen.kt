@@ -1089,255 +1089,255 @@ fun HomeScreen(
         }
 
         DynamicArtworkBackground(artworkUrl = activeHeroArtworkUrl) {
-          CompositionLocalProvider(LocalHomeHeroTopInset provides HomeCinemaHeaderHeight) {
-            NuvioScreen(
-                modifier = Modifier.fillMaxSize().then(heroStretchModifier),
-                horizontalPadding = 0.dp,
-                topPadding = if (showHeroSlot) 0.dp else headerStatusBarTop + HomeCinemaHeaderHeight + 8.dp,
-                listState = homeListState,
-            ) {
-                if (showHeroSlot) {
-                    item(key = "home_hero", contentType = "hero") {
-                        Crossfade(
-                            targetState = showHeroSkeleton,
-                            modifier = Modifier.nuvioHorizontalScrollBleed(LocalVerticalBarPadding.current),
-                            animationSpec = tween(320),
-                            label = "HomeHeroLoading",
-                        ) { isLoading ->
-                            when {
-                                isLoading -> HomeSkeletonHero(
-                                    modifier = Modifier,
-                                    viewportHeight = maxHeight,
-                                    mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
-                                    heroStyle = homeSettingsUiState.heroStyle,
-                                )
+            CompositionLocalProvider(LocalHomeHeroTopInset provides HomeCinemaHeaderHeight) {
+                NuvioScreen(
+                    modifier = Modifier.fillMaxSize().then(heroStretchModifier),
+                    horizontalPadding = 0.dp,
+                    topPadding = if (showHeroSlot) 0.dp else headerStatusBarTop + HomeCinemaHeaderHeight + 8.dp,
+                    listState = homeListState,
+                ) {
+                    if (showHeroSlot) {
+                        item(key = "home_hero", contentType = "hero") {
+                            Crossfade(
+                                targetState = showHeroSkeleton,
+                                modifier = Modifier.nuvioHorizontalScrollBleed(LocalVerticalBarPadding.current),
+                                animationSpec = tween(320),
+                                label = "HomeHeroLoading",
+                            ) { isLoading ->
+                                when {
+                                    isLoading -> HomeSkeletonHero(
+                                        modifier = Modifier,
+                                        viewportHeight = maxHeight,
+                                        mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
+                                        heroStyle = homeSettingsUiState.heroStyle,
+                                    )
 
-                                homeUiState.heroItems.isNotEmpty() -> HomeHeroSection(
-                                    items = filteredHeroItems,
-                                    modifier = Modifier,
-                                    viewportHeight = maxHeight,
-                                    mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
-                                    heroStyle = homeSettingsUiState.heroStyle,
-                                    listState = homeListState,
-                                    stretchPx = { heroStretchState.stretchPx },
-                                    // animateCollectionGifs doubles as "Home is the visible route" — it already
-                                    // turns false whenever a screen (like Details) is pushed on top of it, which
-                                    // is also exactly when hero trailer playback must stop, not just pause.
-                                    trailerPlaybackEnabled = homeSettingsUiState.heroTrailerPlaybackEnabled &&
-                                        animateCollectionGifs,
-                                    trailerStartDelaySeconds = homeSettingsUiState.heroTrailerStartDelaySeconds,
-                                    trailerStartUnmuted = homeSettingsUiState.heroTrailerStartUnmuted,
-                                    showImdbRating = homeHeroState.showImdbRating,
-                                    showMdbListRatings = homeHeroState.showMdbListRatings,
-                                    onItemClick = onPosterClick,
-                                    onPlayClick = onHeroPlayClick,
-                                    onMyListClick = onHeroMyListClick,
-                                    onActiveArtworkChange = onActiveHeroArtworkChange,
-                                )
+                                    homeUiState.heroItems.isNotEmpty() -> HomeHeroSection(
+                                        items = filteredHeroItems,
+                                        modifier = Modifier,
+                                        viewportHeight = maxHeight,
+                                        mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
+                                        heroStyle = homeSettingsUiState.heroStyle,
+                                        listState = homeListState,
+                                        stretchPx = { heroStretchState.stretchPx },
+                                        // animateCollectionGifs doubles as "Home is the visible route" — it already
+                                        // turns false whenever a screen (like Details) is pushed on top of it, which
+                                        // is also exactly when hero trailer playback must stop, not just pause.
+                                        trailerPlaybackEnabled = homeSettingsUiState.heroTrailerPlaybackEnabled &&
+                                            animateCollectionGifs,
+                                        trailerStartDelaySeconds = homeSettingsUiState.heroTrailerStartDelaySeconds,
+                                        trailerStartUnmuted = homeSettingsUiState.heroTrailerStartUnmuted,
+                                        showImdbRating = homeHeroState.showImdbRating,
+                                        showMdbListRatings = homeHeroState.showMdbListRatings,
+                                        onItemClick = onPosterClick,
+                                        onPlayClick = onHeroPlayClick,
+                                        onMyListClick = onHeroMyListClick,
+                                        onActiveArtworkChange = onActiveHeroArtworkChange,
+                                    )
 
-                                else -> HomeHeroReservedSpace(
-                                    modifier = Modifier,
-                                    viewportHeight = maxHeight,
-                                    mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
-                                    heroStyle = homeSettingsUiState.heroStyle,
-                                )
+                                    else -> HomeHeroReservedSpace(
+                                        modifier = Modifier,
+                                        viewportHeight = maxHeight,
+                                        mobileBelowSectionHeightHint = mobileHeroBelowSectionHeightHint,
+                                        heroStyle = homeSettingsUiState.heroStyle,
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                when {
-                    isInitialHomeContentLoading -> {
-                        homeContinueWatchingSections(
-                            preferences = continueWatchingPreferences,
-                            continueWatchingItems = continueWatchingItems,
-                            upcomingItems = upcomingItems,
-                            dataSourceKey = effectiveWatchProgressSource,
-                            sectionPadding = homeSectionPadding,
-                            layout = continueWatchingLayout,
-                            continueWatchingListState = continueWatchingListState,
-                            upcomingListState = upcomingListState,
-                            onItemClick = onContinueWatchingClick,
-                            onItemLongPress = onContinueWatchingLongPress,
-                        disintegrationRequest = continueWatchingDisintegrationRequest,
+                    when {
+                        isInitialHomeContentLoading -> {
+                            homeContinueWatchingSections(
+                                preferences = continueWatchingPreferences,
+                                continueWatchingItems = continueWatchingItems,
+                                upcomingItems = upcomingItems,
+                                dataSourceKey = effectiveWatchProgressSource,
+                                sectionPadding = homeSectionPadding,
+                                layout = continueWatchingLayout,
+                                continueWatchingListState = continueWatchingListState,
+                                upcomingListState = upcomingListState,
+                                onItemClick = onContinueWatchingClick,
+                                onItemLongPress = onContinueWatchingLongPress,
+                            disintegrationRequest = continueWatchingDisintegrationRequest,
                             continueWatchingTitle = continueWatchingTitle,
                             onItemInfoClick = onContinueWatchingInfoClick,
-                        )
-                        items(3) {
-                            HomeSkeletonRow(
-                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
+                            items(3) {
+                                HomeSkeletonRow(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                )
+                            }
                         }
-                    }
 
-                    !hasActiveAddons && !hasServerLibraries && !hasRenderableCollectionRows -> {
-                        homeContinueWatchingSections(
-                            preferences = continueWatchingPreferences,
-                            continueWatchingItems = continueWatchingItems,
-                            upcomingItems = upcomingItems,
-                            dataSourceKey = effectiveWatchProgressSource,
-                            sectionPadding = homeSectionPadding,
-                            layout = continueWatchingLayout,
-                            continueWatchingListState = continueWatchingListState,
-                            upcomingListState = upcomingListState,
-                            onItemClick = onContinueWatchingClick,
-                            onItemLongPress = onContinueWatchingLongPress,
-                        disintegrationRequest = continueWatchingDisintegrationRequest,
+                        !hasActiveAddons && !hasServerLibraries && !hasRenderableCollectionRows -> {
+                            homeContinueWatchingSections(
+                                preferences = continueWatchingPreferences,
+                                continueWatchingItems = continueWatchingItems,
+                                upcomingItems = upcomingItems,
+                                dataSourceKey = effectiveWatchProgressSource,
+                                sectionPadding = homeSectionPadding,
+                                layout = continueWatchingLayout,
+                                continueWatchingListState = continueWatchingListState,
+                                upcomingListState = upcomingListState,
+                                onItemClick = onContinueWatchingClick,
+                                onItemLongPress = onContinueWatchingLongPress,
+                            disintegrationRequest = continueWatchingDisintegrationRequest,
                             continueWatchingTitle = continueWatchingTitle,
                             onItemInfoClick = onContinueWatchingInfoClick,
-                        )
-                        item {
-                            when {
-                                networkStatusUiState.isOfflineLike && addonManifestErrorMessage != null -> {
+                            )
+                            item {
+                                when {
+                                    networkStatusUiState.isOfflineLike && addonManifestErrorMessage != null -> {
+                                        NuvioNetworkOfflineCard(
+                                            condition = networkStatusUiState.condition,
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            onRetry = {
+                                                NetworkStatusRepository.requestRefresh(force = true)
+                                                AddonRepository.refreshAll()
+                                            },
+                                        )
+                                    }
+
+                                    addonManifestErrorMessage != null -> {
+                                        HomeEmptyStateCard(
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            title = stringResource(Res.string.home_load_failed_title),
+                                            message = addonManifestErrorMessage,
+                                            actionLabel = stringResource(Res.string.action_retry),
+                                            onActionClick = {
+                                                NetworkStatusRepository.requestRefresh(force = true)
+                                                AddonRepository.refreshAll()
+                                            },
+                                        )
+                                    }
+
+                                    else -> {
+                                        HomeEmptyStateCard(
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            title = stringResource(Res.string.home_empty_no_sources_title),
+                                            message = stringResource(Res.string.home_empty_no_sources_message),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        homeUiState.sections.isEmpty() && homeUiState.heroItems.isEmpty() &&
+                            (!continueWatchingPreferences.isVisible || !hasContinueWatchingRows) &&
+                            !hasRenderableCollectionRows -> {
+                            item {
+                                val loadFailed = !homeUiState.errorMessage.isNullOrBlank()
+                                if (networkStatusUiState.isOfflineLike && loadFailed) {
                                     NuvioNetworkOfflineCard(
                                         condition = networkStatusUiState.condition,
                                         modifier = Modifier.padding(horizontal = 16.dp),
                                         onRetry = {
                                             NetworkStatusRepository.requestRefresh(force = true)
-                                            AddonRepository.refreshAll()
-                                        },
-                                    )
-                                }
-
-                                addonManifestErrorMessage != null -> {
-                                    HomeEmptyStateCard(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        title = stringResource(Res.string.home_load_failed_title),
-                                        message = addonManifestErrorMessage,
-                                        actionLabel = stringResource(Res.string.action_retry),
-                                        onActionClick = {
-                                            NetworkStatusRepository.requestRefresh(force = true)
-                                            AddonRepository.refreshAll()
-                                        },
-                                    )
-                                }
-
-                                else -> {
-                                    HomeEmptyStateCard(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        title = stringResource(Res.string.home_empty_no_sources_title),
-                                        message = stringResource(Res.string.home_empty_no_sources_message),
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    homeUiState.sections.isEmpty() && homeUiState.heroItems.isEmpty() &&
-                        (!continueWatchingPreferences.isVisible || !hasContinueWatchingRows) &&
-                        !hasRenderableCollectionRows -> {
-                        item {
-                            val loadFailed = !homeUiState.errorMessage.isNullOrBlank()
-                            if (networkStatusUiState.isOfflineLike && loadFailed) {
-                                NuvioNetworkOfflineCard(
-                                    condition = networkStatusUiState.condition,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    onRetry = {
-                                        NetworkStatusRepository.requestRefresh(force = true)
-                                        HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
-                                    },
-                                )
-                            } else {
-                                HomeEmptyStateCard(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    title = stringResource(
-                                        if (loadFailed) {
-                                            Res.string.home_load_failed_title
-                                        } else {
-                                            Res.string.home_empty_no_rows_title
-                                        },
-                                    ),
-                                    message = homeUiState.errorMessage
-                                        ?: stringResource(Res.string.home_empty_no_rows_message),
-                                    actionLabel = if (loadFailed) stringResource(Res.string.action_retry) else null,
-                                    onActionClick = if (loadFailed) {
-                                        {
-                                            NetworkStatusRepository.requestRefresh(force = true)
                                             HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
-                                        }
-                                    } else {
-                                        null
-                                    },
-                                )
+                                        },
+                                    )
+                                } else {
+                                    HomeEmptyStateCard(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        title = stringResource(
+                                            if (loadFailed) {
+                                                Res.string.home_load_failed_title
+                                            } else {
+                                                Res.string.home_empty_no_rows_title
+                                            },
+                                        ),
+                                        message = homeUiState.errorMessage
+                                            ?: stringResource(Res.string.home_empty_no_rows_message),
+                                        actionLabel = if (loadFailed) stringResource(Res.string.action_retry) else null,
+                                        onActionClick = if (loadFailed) {
+                                            {
+                                                NetworkStatusRepository.requestRefresh(force = true)
+                                                HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
+                                            }
+                                        } else {
+                                            null
+                                        },
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    else -> {
-                        homeContinueWatchingSections(
-                            preferences = continueWatchingPreferences,
-                            continueWatchingItems = continueWatchingItems,
-                            upcomingItems = upcomingItems,
-                            dataSourceKey = effectiveWatchProgressSource,
-                            sectionPadding = homeSectionPadding,
-                            layout = continueWatchingLayout,
-                            continueWatchingListState = continueWatchingListState,
-                            upcomingListState = upcomingListState,
-                            onItemClick = onContinueWatchingClick,
-                            onItemLongPress = onContinueWatchingLongPress,
-                        disintegrationRequest = continueWatchingDisintegrationRequest,
+                        else -> {
+                            homeContinueWatchingSections(
+                                preferences = continueWatchingPreferences,
+                                continueWatchingItems = continueWatchingItems,
+                                upcomingItems = upcomingItems,
+                                dataSourceKey = effectiveWatchProgressSource,
+                                sectionPadding = homeSectionPadding,
+                                layout = continueWatchingLayout,
+                                continueWatchingListState = continueWatchingListState,
+                                upcomingListState = upcomingListState,
+                                onItemClick = onContinueWatchingClick,
+                                onItemLongPress = onContinueWatchingLongPress,
+                            disintegrationRequest = continueWatchingDisintegrationRequest,
                             continueWatchingTitle = continueWatchingTitle,
                             onItemInfoClick = onContinueWatchingInfoClick,
-                        )
+                            )
 
-                        keyedEnabledHomeItems.forEach { keyedSettingsItem ->
-                            val settingsItem = keyedSettingsItem.value
-                            if (settingsItem.isCollection) {
-                                val collection = collectionsMap[settingsItem.key]
-                                if (collection != null && !contentFilter.isActive) {
-                                    item(key = keyedSettingsItem.lazyKey) {
-                                        HomeCollectionRowSection(
-                                            collection = collection,
-                                            modifier = Modifier.padding(bottom = 12.dp),
-                                            sectionPadding = homeSectionPadding,
-                                            animateGifs = animateCollectionGifs,
-                                            onFolderClick = onFolderClick,
-                                        )
+                            keyedEnabledHomeItems.forEach { keyedSettingsItem ->
+                                val settingsItem = keyedSettingsItem.value
+                                if (settingsItem.isCollection) {
+                                    val collection = collectionsMap[settingsItem.key]
+                                    if (collection != null && !contentFilter.isActive) {
+                                        item(key = keyedSettingsItem.lazyKey) {
+                                            HomeCollectionRowSection(
+                                                collection = collection,
+                                                modifier = Modifier.padding(bottom = 12.dp),
+                                                sectionPadding = homeSectionPadding,
+                                                animateGifs = animateCollectionGifs,
+                                                onFolderClick = onFolderClick,
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    val section = sectionsMap[settingsItem.key]
+                                    val sectionEntries = section?.items
+                                        ?.filter { contentFilter.accepts(it.type, it.genres) }
+                                        ?.take(HOME_CATALOG_PREVIEW_LIMIT)
+                                        .orEmpty()
+                                    if (section != null && sectionEntries.isNotEmpty()) {
+                                        item(key = keyedSettingsItem.lazyKey) {
+                                            HomeCatalogRowSection(
+                                                section = section,
+                                                entries = sectionEntries,
+                                                modifier = Modifier.padding(bottom = 12.dp),
+                                                sectionPadding = homeSectionPadding,
+                                                onViewAllClick = if (section.canOpenCatalog(HOME_CATALOG_PREVIEW_LIMIT)) {
+                                                    onCatalogClick?.let { { it(section) } }
+                                                } else {
+                                                    null
+                                                },
+                                                watchedKeys = watchedUiState.watchedKeys,
+                                                fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
+                                                onPosterClick = onPosterClick,
+                                                onPosterLongClick = onPosterLongClick,
+                                            )
+                                        }
                                     }
                                 }
-                            } else {
-                                val section = sectionsMap[settingsItem.key]
-                                val sectionEntries = section?.items
-                                    ?.filter { contentFilter.accepts(it.type, it.genres) }
-                                    ?.take(HOME_CATALOG_PREVIEW_LIMIT)
-                                    .orEmpty()
-                                if (section != null && sectionEntries.isNotEmpty()) {
-                                    item(key = keyedSettingsItem.lazyKey) {
-                                        HomeCatalogRowSection(
-                                            section = section,
-                                            entries = sectionEntries,
-                                            modifier = Modifier.padding(bottom = 12.dp),
+                                if (keyedSettingsItem.lazyKey == firstRowKey && top10Section != null && top10Entries.size >= 3) {
+                                    item(key = HOME_TOP10_SECTION_KEY) {
+                                        HomeTop10Row(
+                                            section = top10Section,
+                                            entries = top10Entries,
                                             sectionPadding = homeSectionPadding,
-                                            onViewAllClick = if (section.canOpenCatalog(HOME_CATALOG_PREVIEW_LIMIT)) {
-                                                onCatalogClick?.let { { it(section) } }
-                                            } else {
-                                                null
-                                            },
-                                            watchedKeys = watchedUiState.watchedKeys,
-                                            fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
+                                            modifier = Modifier.padding(bottom = 12.dp),
                                             onPosterClick = onPosterClick,
                                             onPosterLongClick = onPosterLongClick,
                                         )
                                     }
                                 }
                             }
-                            if (keyedSettingsItem.lazyKey == firstRowKey && top10Section != null && top10Entries.size >= 3) {
-                                item(key = HOME_TOP10_SECTION_KEY) {
-                                    HomeTop10Row(
-                                        section = top10Section,
-                                        entries = top10Entries,
-                                        sectionPadding = homeSectionPadding,
-                                        modifier = Modifier.padding(bottom = 12.dp),
-                                        onPosterClick = onPosterClick,
-                                        onPosterLongClick = onPosterLongClick,
-                                    )
-                                }
-                            }
                         }
                     }
                 }
             }
-          }
         }
 
         HomeCinemaHeader(

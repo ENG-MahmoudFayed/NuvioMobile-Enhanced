@@ -258,19 +258,19 @@ internal fun MyFlowixScreen(
                         title = stringResource(Res.string.home_hero_my_list),
                         onSeeAll = onOpenLibrary,
                     )
-                NuvioShelfSection(
-                    title = "",
-                    entries = myList,
-                    rowContentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
-                    itemSpacing = 8.dp,
-                    key = { item -> item.stableKey() },
-                ) { item ->
-                    HomePosterCard(
-                        item = item,
-                        onClick = onPosterClick?.let { { it(item) } },
-                        onLongClick = onPosterLongClick?.let { { it(item) } },
-                    )
-                }
+                    NuvioShelfSection(
+                        title = "",
+                        entries = myList,
+                        rowContentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
+                        itemSpacing = 8.dp,
+                        key = { item -> item.stableKey() },
+                    ) { item ->
+                        HomePosterCard(
+                            item = item,
+                            onClick = onPosterClick?.let { { it(item) } },
+                            onLongClick = onPosterLongClick?.let { { it(item) } },
+                        )
+                    }
                 }
             }
         }

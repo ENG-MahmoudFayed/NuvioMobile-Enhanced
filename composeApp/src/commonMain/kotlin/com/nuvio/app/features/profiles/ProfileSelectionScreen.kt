@@ -332,7 +332,7 @@ fun ProfileSelectionScreen(
                 Spacer(Modifier.height(14.dp))
 
                 val profiles = profileState.profiles
-                val tiles = buildList {
+                val tiles = buildList<ProfileTile> {
                     profiles.forEach { add(ProfileTile.Profile(it)) }
                     if (profiles.size < MAX_PROFILES) add(ProfileTile.Add)
                     if (profiles.isNotEmpty()) add(ProfileTile.Edit)
