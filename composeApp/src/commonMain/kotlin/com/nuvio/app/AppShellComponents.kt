@@ -36,11 +36,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -83,7 +85,10 @@ import com.nuvio.app.features.profiles.parseHexColor
 import com.nuvio.app.features.profiles.profileAvatarImageUrl
 import com.nuvio.app.features.search.SearchScreen
 import com.nuvio.app.features.settings.AppBrandWordmark
+import com.nuvio.app.features.myflowix.MyFlowixScreen
 import com.nuvio.app.features.settings.SettingsScreen
+import com.nuvio.app.core.ui.PlatformBackHandler
+import com.nuvio.app.navigation.LocalNativeNavigationBarHidden
 import com.nuvio.app.features.watchprogress.ContinueWatchingItem
 import com.nuvio.app.navigation.AppRoute
 import com.nuvio.app.navigation.NuvioNavigator
@@ -94,11 +99,10 @@ import kotlinx.coroutines.launch
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.app_brand_name
 import nuvio.composeapp.generated.resources.compose_nav_home
-import nuvio.composeapp.generated.resources.compose_nav_library
+import nuvio.composeapp.generated.resources.nav_my_flowix
 import nuvio.composeapp.generated.resources.compose_nav_live_tv
 import nuvio.composeapp.generated.resources.compose_nav_profile
 import nuvio.composeapp.generated.resources.compose_nav_search
-import nuvio.composeapp.generated.resources.sidebar_library
 import nuvio.composeapp.generated.resources.sidebar_search
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -250,9 +254,10 @@ internal fun AppTabHost(
                 )
             }
 
-            AppScreenTab.Settings -> {
+            AppScreenTab.Settings -> MyFlowixTab(selectedTab, requests, state, actions) { onRootBack ->
                 SettingsScreen(
                     modifier = Modifier.fillMaxSize(),
+                    onRootBack = onRootBack,
                     rootActionRequests = requests.settingsRootActionRequests,
                     requestedPageName = state.requestedSettingsPageName,
                     onRequestedPageConsumed = actions.onRequestedSettingsPageConsumed,
@@ -277,6 +282,72 @@ internal fun AppTabHost(
                     onWatchPartyClick = actions.onWatchPartySettingsClick,
                 )
             }
+        }
+    }
+}
+
+private enum class MyFlowixPane { Home, Settings, Library }
+
+/**
+ * The profile tab opens on My Flowix; App Settings and the full library slide in over it and
+ * return with back, so every setting stays reachable from one place.
+ */
+@Composable
+private fun MyFlowixTab(
+    selectedTab: AppScreenTab,
+    requests: AppTabRequests,
+    state: AppTabState,
+    actions: AppTabActions,
+    settings: @Composable (onRootBack: () -> Unit) -> Unit,
+) {
+    var paneName by rememberSaveable { mutableStateOf(MyFlowixPane.Home.name) }
+    val pane = MyFlowixPane.entries.firstOrNull { it.name == paneName } ?: MyFlowixPane.Home
+    val showHome = { paneName = MyFlowixPane.Home.name }
+
+    LaunchedEffect(state.requestedSettingsPageName) {
+        if (state.requestedSettingsPageName != null) paneName = MyFlowixPane.Settings.name
+    }
+    PlatformBackHandler(
+        enabled = pane != MyFlowixPane.Home && selectedTab == AppScreenTab.Settings && state.rootActionsEnabled,
+        onBack = showHome,
+    )
+
+    // These panes sit at the tab root, where no native bar offers a back button.
+    CompositionLocalProvider(LocalNativeNavigationBarHidden provides true) {
+        when (pane) {
+            MyFlowixPane.Home -> MyFlowixScreen(
+                modifier = Modifier.fillMaxSize(),
+                scrollToTopRequests = requests.settingsRootActionRequests,
+                onOpenAppSettings = { paneName = MyFlowixPane.Settings.name },
+                onOpenAccount = actions.onAccountSettingsClick,
+                onOpenLibrary = { paneName = MyFlowixPane.Library.name },
+                onDownloadsClick = actions.onDownloadsClick,
+                onSwitchProfile = actions.onSwitchProfile,
+                onEditProfile = actions.onEditProfile,
+                onPosterClick = actions.onPosterClick,
+                onPosterLongClick = actions.onPosterLongClick,
+                onContinueWatchingClick = actions.onContinueWatchingClick,
+                onContinueWatchingLongPress = actions.onContinueWatchingLongPress,
+            )
+
+            MyFlowixPane.Settings -> settings(showHome)
+
+            MyFlowixPane.Library -> LibraryScreen(
+                modifier = Modifier.fillMaxSize(),
+                scrollToTopRequests = requests.libraryScrollToTopRequests,
+                onPosterClick = actions.onLibraryPosterClick,
+                onCalendarEpisodeClick = actions.onLibraryCalendarEpisodeClick,
+                onPosterLongClick = actions.onLibraryPosterLongClick,
+                onSectionViewAllClick = actions.onLibrarySectionViewAllClick,
+                onCloudFilePlay = actions.onCloudFilePlay,
+                onConnectCloudClick = actions.onConnectCloudClick,
+                onCatalogClick = actions.onCatalogClick,
+                onPreviewClick = actions.onPosterClick,
+                onPreviewLongClick = actions.onPosterLongClick,
+                onDownloadsClick = actions.onDownloadsClick,
+                disintegrationRequest = state.libraryDisintegrationRequest,
+                onBack = showHome,
+            )
         }
     }
 }
@@ -345,23 +416,6 @@ internal fun TabletFloatingTopBar(
                         )
                     },
                 )
-                TabletTopPillItem(
-                    label = stringResource(Res.string.compose_nav_library),
-                    selected = selectedTab == AppScreenTab.Library,
-                    onClick = { onTabSelected(AppScreenTab.Library) },
-                    icon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.sidebar_library),
-                            contentDescription = stringResource(Res.string.compose_nav_library),
-                            modifier = Modifier.size(NuvioTokens.Space.s18),
-                            tint = if (selectedTab == AppScreenTab.Library) {
-                                tokens.colors.textPrimary
-                            } else {
-                                tokens.colors.textMuted
-                            },
-                        )
-                    },
-                )
                 if (showLiveTv) {
                     TabletTopPillItem(
                         label = stringResource(Res.string.compose_nav_live_tv),
@@ -401,7 +455,7 @@ internal fun TabletFloatingTopBar(
                             onAddProfileRequested = onAddProfileRequested,
                         )
                         Text(
-                            text = stringResource(Res.string.compose_nav_profile),
+                            text = stringResource(Res.string.nav_my_flowix),
                             modifier = Modifier.clickable { onTabSelected(AppScreenTab.Settings) },
                             style = MaterialTheme.typography.labelLarge,
                             color = if (selectedTab == AppScreenTab.Settings) {

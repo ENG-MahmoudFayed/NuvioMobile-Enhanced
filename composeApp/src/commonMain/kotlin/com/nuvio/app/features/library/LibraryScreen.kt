@@ -190,6 +190,7 @@ fun LibraryScreen(
     onPreviewClick: ((MetaPreview) -> Unit)? = null,
     onPreviewLongClick: ((MetaPreview) -> Unit)? = null,
     onDownloadsClick: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
 ) {
     val uiState by remember {
         LibraryRepository.ensureLoaded()
@@ -464,6 +465,7 @@ fun LibraryScreen(
                         }
                     },
                     modifier = Modifier.padding(horizontal = 16.dp),
+                    onBack = onBack,
                 )
                 LibrarySourceSwitch(
                     selectedMode = sourceMode,

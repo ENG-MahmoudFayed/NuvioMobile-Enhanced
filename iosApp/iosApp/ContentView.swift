@@ -402,7 +402,8 @@ enum NuvioAppTab: String, CaseIterable, Hashable {
         switch kotlinName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "home": return .home
         case "search": return .search
-        case "library": return .library
+        // The library lives inside the profile tab (My Flowix).
+        case "library": return .settings
         case "livetv", "live_tv", "live tv": return .liveTv
         case "settings", "profile": return .settings
         default: return nil
@@ -971,7 +972,7 @@ final class AppNavigationCoordinator: ObservableObject {
     }
 
     var availableTabs: [NuvioAppTab] {
-        NuvioAppTab.allCases.filter { $0 != .liveTv || isLiveTvTabVisible }
+        NuvioAppTab.allCases.filter { $0 != .library && ($0 != .liveTv || isLiveTvTabVisible) }
     }
 
     var usesGlassTabBarOverlay: Bool {

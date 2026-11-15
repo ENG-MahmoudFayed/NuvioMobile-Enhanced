@@ -141,6 +141,7 @@ fun SettingsScreen(
     isSelectedTab: Boolean = true,
     onNavigatePage: ((pageName: String, title: String) -> Unit)? = null,
     onExternalBack: (() -> Unit)? = null,
+    onRootBack: (() -> Unit)? = null,
     showInternalHeader: Boolean = true,
     onSwitchProfile: (() -> Unit)? = null,
     onEditProfile: (() -> Unit)? = null,
@@ -417,6 +418,7 @@ fun SettingsScreen(
                         scrollToTopRequests = scrollToTopRequests,
                         onPageChange = ::openPage,
                         onNavigateBack = ::navigateBack,
+                        onRootBack = onRootBack,
                         showInternalHeader = showInternalHeader,
                         showLoadingOverlay = playerSettingsUiState.showLoadingOverlay,
                         holdToSpeedEnabled = playerSettingsUiState.holdToSpeedEnabled,
@@ -497,6 +499,7 @@ fun SettingsScreen(
                         scrollToTopRequests = scrollToTopRequests,
                         onPageChange = ::openPage,
                         onNavigateBack = ::navigateBack,
+                        onRootBack = onRootBack,
                         showInternalHeader = showInternalHeader,
                         showLoadingOverlay = playerSettingsUiState.showLoadingOverlay,
                         holdToSpeedEnabled = playerSettingsUiState.holdToSpeedEnabled,
@@ -589,6 +592,7 @@ private fun MobileSettingsScreen(
     scrollToTopRequests: Flow<Unit>,
     onPageChange: (SettingsPage) -> Unit,
     onNavigateBack: () -> Unit,
+    onRootBack: (() -> Unit)?,
     showInternalHeader: Boolean,
     showLoadingOverlay: Boolean,
     holdToSpeedEnabled: Boolean,
@@ -753,7 +757,7 @@ private fun MobileSettingsScreen(
                     val previousPage = page.previousPage()
                     NuvioScreenHeader(
                         title = stringResource(page.titleRes),
-                        onBack = previousPage?.let { { onNavigateBack() } },
+                        onBack = previousPage?.let { { onNavigateBack() } } ?: onRootBack,
                     )
                 }
             } else {
@@ -1039,6 +1043,7 @@ private fun TabletSettingsScreen(
     scrollToTopRequests: Flow<Unit>,
     onPageChange: (SettingsPage) -> Unit,
     onNavigateBack: () -> Unit,
+    onRootBack: (() -> Unit)?,
     showInternalHeader: Boolean,
     showLoadingOverlay: Boolean,
     holdToSpeedEnabled: Boolean,
@@ -1251,8 +1256,8 @@ private fun TabletSettingsScreen(
                             } else {
                                 stringResource(page.titleRes)
                             },
-                            showBack = previousPage != null,
-                            onBack = onNavigateBack,
+                            showBack = previousPage != null || onRootBack != null,
+                            onBack = if (previousPage != null) onNavigateBack else (onRootBack ?: onNavigateBack),
                         )
                     }
                 }
