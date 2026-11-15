@@ -27,8 +27,18 @@ data class HomeCatalogDefinition(
     val cacheKey: String
         get() = "$key|$descriptorSignature"
 
-    fun titleFor(showCatalogType: Boolean): String =
-        if (showCatalogType) defaultTitle else catalogName
+    /**
+     * The row title. With the type shown, "Popular - Movies" keeps its suffix, but a catalogue
+     * whose name already says it ("Popular Series - Series") drops the repeat.
+     */
+    fun titleFor(showCatalogType: Boolean): String {
+        if (!showCatalogType) return catalogName
+        if (!defaultTitle.startsWith(catalogName)) return defaultTitle
+        val suffix = defaultTitle.removePrefix(catalogName).trim().trimStart('-', '–', '•', '·').trim()
+        if (suffix.isEmpty()) return defaultTitle
+        val stem = suffix.lowercase().removeSuffix("s")
+        return if (catalogName.lowercase().contains(stem)) catalogName else defaultTitle
+    }
 }
 
 fun buildAddonCatalogRefreshSignature(addons: List<ManagedAddon>): List<String> =

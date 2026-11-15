@@ -27,6 +27,17 @@ class HomeCatalogDefinitionTest {
     }
 
     @Test
+    fun `drops a type suffix the catalogue name already says`() {
+        val series = definition.copy(defaultTitle = "Popular Series - Series", catalogName = "Popular Series", type = "series")
+        val movies = definition.copy(
+            defaultTitle = "Critically Acclaimed Movies - Movie",
+            catalogName = "Critically Acclaimed Movies",
+        )
+        assertEquals("Popular Series", series.titleFor(showCatalogType = true))
+        assertEquals("Critically Acclaimed Movies", movies.titleFor(showCatalogType = true))
+    }
+
+    @Test
     fun `omits the type suffix when disabled`() {
         assertEquals("Popular", definition.titleFor(showCatalogType = false))
     }
