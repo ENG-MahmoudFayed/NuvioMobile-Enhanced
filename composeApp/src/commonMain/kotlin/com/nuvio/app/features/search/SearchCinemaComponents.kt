@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.nuvio.app.core.ui.CinemaColors
 import com.nuvio.app.core.ui.CinemaPlayCircle
+import com.nuvio.app.core.ui.CinemaSectionTitle
 import com.nuvio.app.core.ui.pressScale
 import com.nuvio.app.features.home.MetaPreview
 import nuvio.composeapp.generated.resources.Res
@@ -163,16 +164,7 @@ internal fun CinemaSearchField(
 /** Section heading for the search page: bold, one line, the full width. */
 @Composable
 internal fun SearchSectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        color = Color.White,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        fontWeight = FontWeight.Bold,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
-    )
+    CinemaSectionTitle(text = text, modifier = modifier)
 }
 
 /** One recommendation: a wide still on the left, the title, and a ringed play button. */

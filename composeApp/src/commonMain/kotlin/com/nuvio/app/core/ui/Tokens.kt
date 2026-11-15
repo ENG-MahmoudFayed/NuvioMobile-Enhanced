@@ -57,13 +57,13 @@ object NuvioTokens {
         val xxl = Space.s24
         val full = 999.dp
 
-        val card = md
-        val compactCard = md
+        val card = lg
+        val compactCard = lg
         val sheet = Space.s28
         val dialog = Space.s28
         val button = full
         val chip = full
-        val poster = xs
+        val poster = sm
         val avatar = full
         val playerPanel = xxl
     }
@@ -158,9 +158,9 @@ object NuvioTokens {
 
     object LetterSpacing {
         val none = 0.sp
-        val pageDisplay = (-1.2).sp
-        val headline = (-0.8).sp
-        val label = 0.8.sp
+        val pageDisplay = 0.sp
+        val headline = 0.sp
+        val label = 0.sp
     }
 
     object Breakpoint {

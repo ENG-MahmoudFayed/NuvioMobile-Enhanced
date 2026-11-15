@@ -2690,7 +2690,7 @@ private fun TabbedSectionGroup(
             val titleSize = if (maxWidth >= 720.dp) 22.sp else 20.sp
             val headerStyle = MaterialTheme.typography.titleLarge.copy(
                 fontSize = titleSize,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             )
 
             // The active tab wears a short red bar above its title.

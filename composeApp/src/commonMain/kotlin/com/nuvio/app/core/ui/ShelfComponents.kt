@@ -292,14 +292,9 @@ private fun NuvioShelfSectionHeader(
             horizontalArrangement = Arrangement.spacedBy(tokens.spacing.controlGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
+            CinemaSectionTitle(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 26.sp),
-                fontWeight = FontWeight.Bold,
-                color = tokens.colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
             val viewAllPlaceholderModifier = if (onViewAllClick == null) {
                 Modifier

@@ -13,6 +13,7 @@ import com.nuvio.app.AppLoadingProfileAvatar
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.ui.CinemaColors
 import com.nuvio.app.core.ui.CinemaIconAction
+import com.nuvio.app.core.ui.CinemaSectionTitle
 import com.nuvio.app.core.ui.CinemaProfileAvatarShape
 import com.nuvio.app.core.ui.CinemaTopBar
 import com.nuvio.app.core.ui.NuvioStatusModal
@@ -374,14 +375,9 @@ private fun SeeAllHeader(
             .padding(start = MyFlowixHorizontalPadding, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        CinemaSectionTitle(
             text = title,
             modifier = Modifier.weight(1f),
-            fontSize = 21.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
         Row(
             modifier = Modifier
@@ -440,12 +436,9 @@ private fun RecentlyWatchedRow(
             .padding(top = 4.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(
+        CinemaSectionTitle(
             text = stringResource(Res.string.my_flowix_recently_watched),
             modifier = Modifier.padding(horizontal = MyFlowixHorizontalPadding),
-            fontSize = 21.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
         )
         LazyRow(
             contentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
