@@ -1,5 +1,6 @@
 package com.nuvio.app.features.home
 
+import com.nuvio.app.features.home.components.LocalHomeTop10Keys
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -1096,6 +1097,9 @@ fun HomeScreen(
                 ?.filter { contentFilter.accepts(it.type, it.genres) }
                 .orEmpty()
         }
+        val top10Keys = remember(top10Entries) {
+            top10Entries.take(10).mapTo(mutableSetOf()) { it.stableKey() }
+        }
         val firstRowKey = remember(keyedEnabledHomeItems, sectionsMap, collectionsMap, contentFilter) {
             keyedEnabledHomeItems.firstOrNull { keyed ->
                 val item = keyed.value
@@ -1114,6 +1118,7 @@ fun HomeScreen(
             CompositionLocalProvider(
                 LocalHomeHeroTopInset provides HomeCinemaHeaderHeight,
                 LocalShelfPosterWidthDp provides shelfPosterWidthDp,
+                LocalHomeTop10Keys provides top10Keys,
             ) {
               PullToRefreshBox(
                 isRefreshing = userRefreshing,
