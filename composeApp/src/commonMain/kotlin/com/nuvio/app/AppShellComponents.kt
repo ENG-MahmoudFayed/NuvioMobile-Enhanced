@@ -1,5 +1,7 @@
 package com.nuvio.app
 
+import com.nuvio.app.core.ui.CinemaMotion
+import com.nuvio.app.core.ui.rememberReduceMotion
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -523,7 +525,7 @@ private fun TabletTopPillItem(
     }
 }
 
-private val LoadingAvatarSize = 200.dp
+private val LoadingAvatarSize = ProfileTileAvatarSize * 1.6f
 private val LoadingAvatarLift = 70.dp
 private val LoadingSpinnerDrop = 130.dp
 
@@ -544,6 +546,7 @@ internal fun AppLoadingContent(
     val emblemOffsetX = remember { Animatable(0f) }
     val emblemOffsetY = remember { Animatable(0f) }
     val spinnerAlpha = remember { Animatable(0f) }
+    val reduceMotion = rememberReduceMotion()
     val density = LocalDensity.current
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
@@ -558,11 +561,20 @@ internal fun AppLoadingContent(
             emblemScale.snapTo(ProfileTileAvatarSize / LoadingAvatarSize)
             emblemOffsetX.snapTo(entryOrigin.x - size.width / 2f)
             emblemOffsetY.snapTo(entryOrigin.y - (size.height / 2f - liftPx))
-            val travelDuration = 550
-            launch { emblemOffsetX.animateTo(0f, tween(travelDuration, easing = FastOutSlowInEasing)) }
-            launch { emblemScale.animateTo(1f, tween(travelDuration, easing = FastOutSlowInEasing)) }
-            launch { spinnerAlpha.animateTo(1f, tween(240, delayMillis = travelDuration - 120)) }
-            emblemOffsetY.animateTo(0f, tween(travelDuration, easing = FastOutSlowInEasing))
+            if (reduceMotion) {
+                emblemOffsetX.snapTo(0f)
+                emblemOffsetY.snapTo(0f)
+                emblemScale.snapTo(1f)
+                emblemAlpha.snapTo(0f)
+                launch { emblemAlpha.animateTo(1f, tween(CinemaMotion.StandardMillis)) }
+                spinnerAlpha.animateTo(1f, tween(CinemaMotion.StandardMillis))
+            } else {
+                val glide = spring<Float>(dampingRatio = 0.8f, stiffness = 260f)
+                launch { emblemOffsetX.animateTo(0f, glide) }
+                launch { emblemScale.animateTo(1f, glide) }
+                launch { spinnerAlpha.animateTo(1f, tween(240, delayMillis = 300)) }
+                emblemOffsetY.animateTo(0f, glide)
+            }
         } else {
             launch { emblemAlpha.animateTo(1f, tween(260, easing = FastOutSlowInEasing)) }
             launch { spinnerAlpha.animateTo(1f, tween(320, delayMillis = 120)) }

@@ -71,7 +71,7 @@ private enum class AppGateScreen {
 // before the exit is allowed to start; the no-origin (native profile switcher) path instead plays
 // a slower spring-bounce entrance and needs the longer runway to fully settle before being cut
 // off — shortening it regressed into exactly that cut-off-mid-bounce glitch once before.
-private const val ProfileTransitionMinDurationWithOriginMs = 650L
+private const val ProfileTransitionMinDurationWithOriginMs = 800L
 private const val ProfileTransitionMinDurationMs = 1000L
 
 @Composable

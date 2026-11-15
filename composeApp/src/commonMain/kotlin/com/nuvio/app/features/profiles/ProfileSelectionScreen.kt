@@ -1,5 +1,7 @@
 package com.nuvio.app.features.profiles
 
+import com.nuvio.app.core.ui.CinemaMotion
+import com.nuvio.app.core.ui.rememberReduceMotion
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
@@ -190,7 +192,7 @@ fun ProfileSelectionScreen(
     }
 
     LaunchedEffect(contentVisible) {
-        contentFadeAlpha.animateTo(if (contentVisible) 1f else 0f, tween(180))
+        contentFadeAlpha.animateTo(if (contentVisible) 1f else 0f, tween(250))
     }
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -359,7 +361,7 @@ fun ProfileSelectionScreen(
                             ),
                     ) {
                         rowTiles.forEachIndexed { columnIndex, tile ->
-                            val animDelay = (rowIndex * columns + columnIndex) * 80
+                            val animDelay = (rowIndex * columns + columnIndex) * 50
                             when (tile) {
                                 is ProfileTile.Profile -> ProfileAvatarCard(
                                     profile = tile.profile,
@@ -453,14 +455,20 @@ private class TileEntrance(
 
 @Composable
 private fun rememberTileEntrance(animDelay: Int): TileEntrance {
+    val reduceMotion = rememberReduceMotion()
     val entrance = remember {
         TileEntrance(Animatable(0f), Animatable(0.85f), Animatable(30f))
     }
     LaunchedEffect(Unit) {
-        delay(animDelay.toLong() + 150)
-        launch { entrance.alpha.animateTo(1f, tween(450, easing = FastOutSlowInEasing)) }
-        launch { entrance.scale.animateTo(1f, tween(500, easing = FastOutSlowInEasing)) }
-        launch { entrance.offset.animateTo(0f, tween(500, easing = FastOutSlowInEasing)) }
+        delay(animDelay.toLong() + 120)
+        launch { entrance.alpha.animateTo(1f, tween(CinemaMotion.StandardMillis, easing = FastOutSlowInEasing)) }
+        if (reduceMotion) {
+            entrance.scale.snapTo(1f)
+            entrance.offset.snapTo(0f)
+        } else {
+            launch { entrance.scale.animateTo(1f, CinemaMotion.spring()) }
+            launch { entrance.offset.animateTo(0f, CinemaMotion.spring()) }
+        }
     }
     return entrance
 }
