@@ -438,10 +438,8 @@ internal fun MainAppContent(
     }
 
     fun activateTab(tab: AppScreenTab) {
-        // The library lives inside the profile tab (My Flowix), not in a tab of its own.
         val destination = when {
             tab == AppScreenTab.LiveTv && !showLiveTvInNavigation -> AppScreenTab.Home
-            tab == AppScreenTab.Library -> AppScreenTab.Settings
             else -> tab
         }
         if (useNativeNavigation && onActivate != null) {

@@ -2935,6 +2935,7 @@
     <string name="my_flowix_recently_watched">Recently Watched</string>
     <string name="my_flowix_my_list_empty">Titles you add to My List appear here.</string>
     <string name="my_flowix_see_all">See All</string>
+<string name="my_flowix_new_releases">Nuove uscite</string>
     <string name="auth_welcome_wall_title">Movies and shows in just a few taps</string>
     <string name="auth_welcome_wall_subtitle">Your addons, your library, on every screen</string>
     <string name="auth_welcome_ready_title">Ready for endless entertainment?</string>

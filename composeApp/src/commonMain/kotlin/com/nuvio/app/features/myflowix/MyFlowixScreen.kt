@@ -103,6 +103,9 @@ import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepositor
 import com.nuvio.app.features.watchprogress.WatchProgressEntry
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
 import com.nuvio.app.features.watchprogress.toContinueWatchingItem
+import com.nuvio.app.features.addons.AddonRepository
+import com.nuvio.app.features.catalog.CatalogRepository
+import com.nuvio.app.features.catalog.CatalogTarget
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
@@ -149,6 +152,38 @@ internal fun MyFlowixScreen(
         LibraryRepository.ensureLoaded()
         LibraryRepository.uiState
     }.collectAsStateWithLifecycle()
+
+    val addonUiState by remember {
+        AddonRepository.initialize()
+        AddonRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val catalogUiState by remember {
+        CatalogRepository.uiState
+    }.collectAsStateWithLifecycle()
+
+    val firstMovieCatalog = remember(addonUiState.addons) {
+        addonUiState.addons
+            .filter { it.enabled && it.manifest != null }
+            .flatMap { addon ->
+                addon.manifest!!.catalogs
+                    .filter { catalog -> catalog.type == "movie" }
+                    .map { catalog -> addon to catalog }
+            }
+            .firstOrNull()
+    }
+
+    LaunchedEffect(firstMovieCatalog) {
+        if (firstMovieCatalog != null) {
+            val (addon, catalog) = firstMovieCatalog
+            CatalogRepository.load(
+                target = CatalogTarget.Addon(
+                    manifestUrl = addon.manifestUrl,
+                    contentType = catalog.type,
+                    catalogId = catalog.id,
+                ),
+            )
+        }
+    }
 
     val recentEntries = remember(watchProgressUiState.entries, watchProgressUiState.hiddenContentIds) {
         watchProgressUiState.entries
@@ -269,6 +304,32 @@ internal fun MyFlowixScreen(
                     NuvioShelfSection(
                         title = "",
                         entries = myList,
+                        rowContentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
+                        itemSpacing = 8.dp,
+                        key = { item -> item.stableKey() },
+                    ) { item ->
+                        HomePosterCard(
+                            item = item,
+                            onClick = onPosterClick?.let { { it(item) } },
+                            onLongClick = onPosterLongClick?.let { { it(item) } },
+                        )
+                    }
+                }
+            }
+        }
+        if (firstMovieCatalog != null && catalogUiState.items.isNotEmpty()) {
+            item(key = "my_flowix_new_releases") {
+                Column(
+                    modifier = Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    SeeAllHeader(
+                        title = stringResource(Res.string.my_flowix_new_releases),
+                        onSeeAll = null,
+                    )
+                    NuvioShelfSection(
+                        title = "",
+                        entries = catalogUiState.items.take(20),
                         rowContentPadding = PaddingValues(horizontal = MyFlowixHorizontalPadding),
                         itemSpacing = 8.dp,
                         key = { item -> item.stableKey() },

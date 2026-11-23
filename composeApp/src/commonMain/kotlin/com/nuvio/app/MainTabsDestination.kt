@@ -46,10 +46,12 @@ import com.nuvio.app.core.ui.glass.LiquidGlassEffectSettings
 import com.nuvio.app.core.ui.glass.LiquidGlassStyle
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_nav_home
+import nuvio.composeapp.generated.resources.compose_nav_library
 import nuvio.composeapp.generated.resources.nav_my_flowix
 import nuvio.composeapp.generated.resources.compose_nav_live_tv
 import nuvio.composeapp.generated.resources.compose_nav_profile
 import nuvio.composeapp.generated.resources.compose_nav_search
+import nuvio.composeapp.generated.resources.sidebar_library
 import nuvio.composeapp.generated.resources.sidebar_search
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.BoxScope
@@ -257,6 +259,14 @@ internal fun mainFloatingNavigationItems(
     )
     add(
         FloatingNavigationItem(
+            selected = highlightedTab == AppScreenTab.Library,
+            onClick = { onTabSelected(AppScreenTab.Library) },
+            drawable = Res.drawable.sidebar_library,
+            label = stringResource(Res.string.compose_nav_library),
+        ),
+    )
+    add(
+        FloatingNavigationItem(
             selected = highlightedTab == AppScreenTab.Search,
             onClick = { onTabSelected(AppScreenTab.Search) },
             drawable = Res.drawable.sidebar_search,
@@ -308,6 +318,12 @@ internal fun MainClassicNavigationBar(
             onClick = { onTabSelected(AppScreenTab.Home) },
             icon = Icons.Filled.Home,
             contentDescription = stringResource(Res.string.compose_nav_home),
+        )
+        NavItem(
+            selected = highlightedTab == AppScreenTab.Library,
+            onClick = { onTabSelected(AppScreenTab.Library) },
+            icon = Res.drawable.sidebar_library,
+            contentDescription = stringResource(Res.string.compose_nav_library),
         )
         NavItem(
             selected = highlightedTab == AppScreenTab.Search,
